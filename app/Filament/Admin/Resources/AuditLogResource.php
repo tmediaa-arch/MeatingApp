@@ -6,8 +6,13 @@ namespace App\Filament\Admin\Resources;
 
 use App\Domains\Audit\Models\AuditLog;
 use App\Filament\Admin\Resources\AuditLogResource\Pages;
+use Filament\Actions\ViewAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Resources\Resource;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 
@@ -18,9 +23,10 @@ use Illuminate\Database\Eloquent\Model;
 class AuditLogResource extends Resource
 {
     protected static ?string $model = AuditLog::class;
-    protected static ?string $navigationIcon = 'heroicon-o-document-magnifying-glass';
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentList;
     protected static ?string $navigationGroup = 'ممیزی و امنیت';
     protected static ?int $navigationSort = 80;
+    protected static ?string $recordTitleAttribute = 'event';
 
     public static function getModelLabel(): string
     {
@@ -104,14 +110,14 @@ class AuditLogResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('event')
+                SelectFilter::make('event')
                     ->label('رویداد')
                     ->options(fn () => AuditLog::query()
                         ->distinct()
                         ->pluck('event', 'event')
                         ->toArray()),
 
-                Tables\Filters\SelectFilter::make('severity')
+                SelectFilter::make('severity')
                     ->label('شدت')
                     ->options([
                         'debug' => 'Debug',
@@ -121,16 +127,16 @@ class AuditLogResource extends Resource
                         'critical' => 'Critical',
                     ]),
 
-                Tables\Filters\SelectFilter::make('user_id')
+                SelectFilter::make('user_id')
                     ->label('کاربر')
                     ->relationship('user', 'username')
                     ->searchable()
                     ->preload(),
 
-                Tables\Filters\Filter::make('performed_at')
-                    ->form([
-                        \Filament\Forms\Components\DatePicker::make('from')->label('از'),
-                        \Filament\Forms\Components\DatePicker::make('until')->label('تا'),
+                Filter::make('performed_at')
+                    ->schema([
+                        DatePicker::make('from')->label('از'),
+                        DatePicker::make('until')->label('تا'),
                     ])
                     ->query(function ($query, array $data) {
                         return $query
@@ -138,8 +144,8 @@ class AuditLogResource extends Resource
                             ->when($data['until'], fn ($q, $date) => $q->whereDate('performed_at', '<=', $date));
                     }),
             ])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
+            ->recordActions([
+                ViewAction::make(),
             ])
             ->defaultSort('performed_at', 'desc')
             ->paginated([25, 50, 100]);
