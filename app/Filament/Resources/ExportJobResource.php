@@ -8,8 +8,13 @@ use App\Domains\Exports\Enums\ExportStatus;
 use App\Domains\Exports\Enums\ExportType;
 use App\Domains\Exports\Models\ExportJob;
 use App\Filament\Resources\ExportJobResource\Pages;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -17,9 +22,10 @@ class ExportJobResource extends Resource
 {
     protected static ?string $model = ExportJob::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-arrow-down-tray';
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedArrowDownTray;
     protected static ?string $navigationGroup = 'گزارش‌ها';
     protected static ?int $navigationSort = 3;
+    protected static ?string $recordTitleAttribute = 'label';
 
     public static function getModelLabel(): string
     {
@@ -38,14 +44,11 @@ class ExportJobResource extends Resource
                 Tables\Columns\TextColumn::make('id')->label('شناسه')->sortable(),
                 Tables\Columns\TextColumn::make('label')->label('عنوان')->limit(60)->wrap(),
                 Tables\Columns\TextColumn::make('export_type')
-                    ->label('نوع')->badge()
-                    ->formatStateUsing(fn ($state) => $state instanceof ExportType ? $state->label() : $state),
+                    ->label('نوع')->badge(),
                 Tables\Columns\TextColumn::make('format')
                     ->label('فرمت')->badge()->formatStateUsing(fn ($state) => strtoupper((string) $state)),
                 Tables\Columns\TextColumn::make('status')
-                    ->label('وضعیت')->badge()
-                    ->formatStateUsing(fn ($state) => $state instanceof ExportStatus ? $state->label() : $state)
-                    ->color(fn ($state) => $state instanceof ExportStatus ? $state->color() : 'gray'),
+                    ->label('وضعیت')->badge(),
                 Tables\Columns\TextColumn::make('row_count')->label('رکورد')->sortable(),
                 Tables\Columns\TextColumn::make('duration_ms')
                     ->label('زمان')->formatStateUsing(fn ($state) => $state ? "{$state} ms" : '—'),
@@ -55,20 +58,22 @@ class ExportJobResource extends Resource
                     ->label('انقضا')->dateTime('Y-m-d H:i')->color('warning'),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('export_type')
-                    ->options(collect(ExportType::cases())->mapWithKeys(fn ($t) => [$t->value => $t->label()])),
-                Tables\Filters\SelectFilter::make('status')
-                    ->options(collect(ExportStatus::cases())->mapWithKeys(fn ($s) => [$s->value => $s->label()])),
+                SelectFilter::make('export_type')
+                    ->options(ExportType::class),
+                SelectFilter::make('status')
+                    ->options(ExportStatus::class),
             ])
-            ->actions([
-                Tables\Actions\Action::make('download')
-                    ->label('دانلود')
-                    ->icon('heroicon-o-arrow-down-tray')
-                    ->color('success')
-                    ->visible(fn (ExportJob $record) => $record->output_file_id !== null
-                        && (! $record->expires_at || $record->expires_at->isFuture()))
-                    ->url(fn (ExportJob $record) => route('files.download', $record->output_file_id), shouldOpenInNewTab: true),
-                Tables\Actions\ViewAction::make(),
+            ->recordActions([
+                ActionGroup::make([
+                    ViewAction::make(),
+                    Action::make('download')
+                        ->label('دانلود')
+                        ->icon(Heroicon::OutlinedArrowDownTray)
+                        ->color('success')
+                        ->visible(fn (ExportJob $record) => $record->output_file_id !== null
+                            && (! $record->expires_at || $record->expires_at->isFuture()))
+                        ->url(fn (ExportJob $record) => route('files.download', $record->output_file_id), shouldOpenInNewTab: true),
+                ]),
             ])
             ->defaultSort('created_at', 'desc');
     }

@@ -7,12 +7,26 @@ namespace App\Filament\Resources;
 use App\Domains\Minutes\Enums\MinuteStatus;
 use App\Domains\Minutes\Models\Minute;
 use App\Domains\Shared\Enums\ConfidentialityLevel;
+use App\Filament\Admin\Schemas\FormLayout;
 use App\Filament\Resources\MinuteResource\Pages;
 use App\Filament\Resources\MinuteResource\RelationManagers;
-use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TagsInput;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -20,82 +34,88 @@ class MinuteResource extends Resource
 {
     protected static ?string $model = Minute::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;
     protected static ?string $navigationGroup = 'مدیریت پس از جلسه';
     protected static ?string $navigationLabel = 'صورت‌جلسات';
     protected static ?string $modelLabel = 'صورتجلسه';
     protected static ?string $pluralModelLabel = 'صورت‌جلسات';
+    protected static ?string $recordTitleAttribute = 'title';
     protected static ?int $navigationSort = 10;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form->schema([
-            Forms\Components\Section::make('اطلاعات کلی')
-                ->columns(2)
-                ->schema([
-                    Forms\Components\TextInput::make('minute_number')
-                        ->label('شماره صورتجلسه')
-                        ->disabled()
-                        ->dehydrated(false),
+        return $schema->components(FormLayout::withSidebar(
+            main: [
+                Section::make('اطلاعات کلی')
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('minute_number')
+                            ->label('شماره صورتجلسه')
+                            ->disabled()
+                            ->dehydrated(false),
 
-                    Forms\Components\Select::make('meeting_id')
-                        ->label('جلسه')
-                        ->relationship('meeting', 'subject')
-                        ->disabled()
-                        ->dehydrated(),
+                        Select::make('meeting_id')
+                            ->label('جلسه')
+                            ->relationship('meeting', 'subject')
+                            ->disabled()
+                            ->dehydrated(),
 
-                    Forms\Components\TextInput::make('title')
-                        ->label('عنوان')
-                        ->required()
-                        ->maxLength(500)
-                        ->columnSpanFull(),
+                        TextInput::make('title')
+                            ->label('عنوان')
+                            ->required()
+                            ->maxLength(500)
+                            ->columnSpanFull(),
 
-                    Forms\Components\Textarea::make('summary')
-                        ->label('خلاصه')
-                        ->rows(3)
-                        ->columnSpanFull(),
-                ]),
+                        Textarea::make('summary')
+                            ->label('خلاصه')
+                            ->rows(3)
+                            ->columnSpanFull(),
+                    ]),
 
-            Forms\Components\Section::make('محتوای صورتجلسه')
-                ->schema([
-                    Forms\Components\RichEditor::make('content_html')
-                        ->label('متن صورتجلسه')
-                        ->fileAttachmentsDirectory('minutes/attachments')
-                        ->columnSpanFull(),
+                Section::make('محتوای صورتجلسه')
+                    ->schema([
+                        RichEditor::make('content_html')
+                            ->label('متن صورتجلسه')
+                            ->fileAttachmentsDirectory('minutes/attachments')
+                            ->columnSpanFull(),
 
-                    Forms\Components\TagsInput::make('key_decisions')
-                        ->label('تصمیمات کلیدی')
-                        ->placeholder('برای افزودن Enter بزنید')
-                        ->columnSpanFull(),
-                ]),
+                        TagsInput::make('key_decisions')
+                            ->label('تصمیمات کلیدی')
+                            ->placeholder('برای افزودن Enter بزنید')
+                            ->columnSpanFull(),
+                    ]),
+            ],
+            sidebar: [
+                Section::make('وضعیت و محرمانگی')
+                    ->schema([
+                        Select::make('status')
+                            ->label('وضعیت')
+                            ->options(MinuteStatus::class)
+                            ->disabled()
+                            ->dehydrated(false),
 
-            Forms\Components\Section::make('وضعیت و امضاها')
-                ->columns(2)
-                ->schema([
-                    Forms\Components\Select::make('status')
-                        ->label('وضعیت')
-                        ->options(MinuteStatus::options())
-                        ->disabled()
-                        ->dehydrated(false),
+                        Select::make('confidentiality_level')
+                            ->label('سطح محرمانگی')
+                            ->options(ConfidentialityLevel::class)
+                            ->required(),
+                    ]),
 
-                    Forms\Components\Select::make('confidentiality_level')
-                        ->label('سطح محرمانگی')
-                        ->options(ConfidentialityLevel::class)
-                        ->required(),
+                Section::make('امضاها')
+                    ->schema([
+                        TextEntry::make('secretary_signed_at')
+                            ->label('امضای دبیر')
+                            ->state(fn ($record) => $record?->secretary_signed_at
+                                ? $record->secretary_signed_at->format('Y/m/d H:i')
+                                : '— امضا نشده'),
 
-                    Forms\Components\Placeholder::make('secretary_signed_at')
-                        ->label('امضای دبیر')
-                        ->content(fn ($record) => $record?->secretary_signed_at
-                            ? $record->secretary_signed_at->format('Y/m/d H:i')
-                            : '— امضا نشده'),
-
-                    Forms\Components\Placeholder::make('chairperson_signed_at')
-                        ->label('امضای رئیس')
-                        ->content(fn ($record) => $record?->chairperson_signed_at
-                            ? $record->chairperson_signed_at->format('Y/m/d H:i')
-                            : '— امضا نشده'),
-                ]),
-        ]);
+                        TextEntry::make('chairperson_signed_at')
+                            ->label('امضای رئیس')
+                            ->state(fn ($record) => $record?->chairperson_signed_at
+                                ? $record->chairperson_signed_at->format('Y/m/d H:i')
+                                : '— امضا نشده'),
+                    ]),
+            ],
+        ));
     }
 
     public static function table(Table $table): Table
@@ -119,9 +139,7 @@ class MinuteResource extends Resource
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('وضعیت')
-                    ->badge()
-                    ->color(fn (MinuteStatus $state) => $state->color())
-                    ->formatStateUsing(fn (MinuteStatus $state) => $state->label()),
+                    ->badge(),
 
                 Tables\Columns\IconColumn::make('secretary_signed_at')
                     ->label('امضای دبیر')
@@ -140,17 +158,24 @@ class MinuteResource extends Resource
                     ->sortable(),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('status')
+                SelectFilter::make('status')
                     ->label('وضعیت')
-                    ->options(MinuteStatus::options()),
-                Tables\Filters\SelectFilter::make('organization_id')
+                    ->options(MinuteStatus::class),
+                SelectFilter::make('organization_id')
                     ->label('سازمان')
                     ->relationship('organization', 'name'),
             ])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make()
-                    ->visible(fn (Minute $minute) => $minute->status->isEditable()),
+            ->recordActions([
+                ActionGroup::make([
+                    ViewAction::make(),
+                    EditAction::make()
+                        ->visible(fn (Minute $minute) => $minute->status->isEditable()),
+                ]),
+            ])
+            ->groupedBulkActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
             ])
             ->defaultSort('created_at', 'desc');
     }

@@ -6,12 +6,22 @@ namespace App\Filament\Resources;
 
 use App\Domains\Workflow\Enums\ProcessDefinitionStatus;
 use App\Domains\Workflow\Models\ProcessDefinition;
+use App\Filament\Admin\Schemas\FormLayout;
 use App\Filament\Resources\ProcessDefinitionResource\Pages;
-use App\Filament\Resources\ProcessDefinitionResource\RelationManagers;
-use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -19,9 +29,10 @@ class ProcessDefinitionResource extends Resource
 {
     protected static ?string $model = ProcessDefinition::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-cube-transparent';
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedCubeTransparent;
     protected static ?string $navigationGroup = 'گردش کار';
     protected static ?int $navigationSort = 10;
+    protected static ?string $recordTitleAttribute = 'name';
 
     public static function getModelLabel(): string
     {
@@ -33,49 +44,54 @@ class ProcessDefinitionResource extends Resource
         return 'فرایندها';
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form->schema([
-            Forms\Components\Section::make('اطلاعات فرایند')->schema([
-                Forms\Components\TextInput::make('process_key')
-                    ->label('کلید فرایند')
-                    ->required()
-                    ->maxLength(100)
-                    ->helperText('کلید یکتا — مثلاً meeting_minute_approval'),
+        return $schema->components(FormLayout::withSidebar(
+            main: [
+                Section::make('اطلاعات فرایند')
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('process_key')
+                            ->label('کلید فرایند')
+                            ->required()
+                            ->maxLength(100)
+                            ->helperText('کلید یکتا — مثلاً meeting_minute_approval'),
 
-                Forms\Components\TextInput::make('name')
-                    ->label('نام')
-                    ->required(),
+                        TextInput::make('name')
+                            ->label('نام')
+                            ->required(),
 
-                Forms\Components\TextInput::make('category')
-                    ->label('دسته')
-                    ->datalist(['meeting', 'task', 'approval', 'system'])
-                    ->maxLength(50),
+                        TextInput::make('category')
+                            ->label('دسته')
+                            ->datalist(['meeting', 'task', 'approval', 'system'])
+                            ->maxLength(50),
 
-                Forms\Components\Textarea::make('description')
-                    ->label('شرح')
-                    ->rows(3)
-                    ->columnSpanFull(),
-            ])->columns(2),
+                        Textarea::make('description')
+                            ->label('شرح')
+                            ->rows(3)
+                            ->columnSpanFull(),
+                    ]),
 
-            Forms\Components\Section::make('BPMN XML')->schema([
-                Forms\Components\Textarea::make('bpmn_xml')
-                    ->label('محتوای BPMN 2.0 XML')
-                    ->required()
-                    ->rows(20)
-                    ->extraInputAttributes(['style' => 'font-family: monospace; font-size: 11px;'])
-                    ->columnSpanFull()
-                    ->helperText('شما می‌توانید از Designer گرافیکی استفاده کنید یا XML را مستقیماً paste کنید.'),
-            ]),
-
-            Forms\Components\Section::make('انتشار')->schema([
-                Forms\Components\Toggle::make('publish_immediately')
-                    ->label('انتشار فوری پس از deploy')
-                    ->dehydrated(false)
-                    ->visible(fn ($context) => $context === 'create')
-                    ->default(false),
-            ]),
-        ]);
+                Section::make('BPMN XML')->schema([
+                    Textarea::make('bpmn_xml')
+                        ->label('محتوای BPMN 2.0 XML')
+                        ->required()
+                        ->rows(20)
+                        ->extraInputAttributes(['style' => 'font-family: monospace; font-size: 11px;'])
+                        ->columnSpanFull()
+                        ->helperText('شما می‌توانید از Designer گرافیکی استفاده کنید یا XML را مستقیماً paste کنید.'),
+                ]),
+            ],
+            sidebar: [
+                Section::make('انتشار')->schema([
+                    Toggle::make('publish_immediately')
+                        ->label('انتشار فوری پس از deploy')
+                        ->dehydrated(false)
+                        ->visible(fn ($context) => $context === 'create')
+                        ->default(false),
+                ]),
+            ],
+        ));
     }
 
     public static function table(Table $table): Table
@@ -106,9 +122,7 @@ class ProcessDefinitionResource extends Resource
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('وضعیت')
-                    ->badge()
-                    ->color(fn (ProcessDefinitionStatus $s) => $s->color())
-                    ->formatStateUsing(fn (ProcessDefinitionStatus $s) => $s->label()),
+                    ->badge(),
 
                 Tables\Columns\IconColumn::make('is_latest')
                     ->label('آخرین')
@@ -128,61 +142,54 @@ class ProcessDefinitionResource extends Resource
                     ->toggleable(),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('status')
+                SelectFilter::make('status')
                     ->label('وضعیت')
-                    ->options(ProcessDefinitionStatus::options()),
+                    ->options(ProcessDefinitionStatus::class),
 
-                Tables\Filters\Filter::make('latest_only')
+                Filter::make('latest_only')
                     ->label('فقط آخرین نسخه')
                     ->query(fn (Builder $q) => $q->where('is_latest', true))
                     ->default(),
             ])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make()
-                    ->visible(fn (ProcessDefinition $r) => $r->status === ProcessDefinitionStatus::Draft),
+            ->recordActions([
+                ActionGroup::make([
+                    ViewAction::make(),
+                    EditAction::make()
+                        ->visible(fn (ProcessDefinition $r) => $r->status === ProcessDefinitionStatus::Draft),
 
-                Tables\Actions\Action::make('publish')
-                    ->label('انتشار')
-                    ->icon('heroicon-o-rocket-launch')
-                    ->color('success')
-                    ->visible(fn (ProcessDefinition $r) => $r->status === ProcessDefinitionStatus::Draft)
-                    ->requiresConfirmation()
-                    ->action(function (ProcessDefinition $r) {
-                        // unset previous latest
-                        ProcessDefinition::where('organization_id', $r->organization_id)
-                            ->where('process_key', $r->process_key)
-                            ->where('id', '!=', $r->id)
-                            ->update(['is_latest' => false]);
+                    Action::make('publish')
+                        ->label('انتشار')
+                        ->icon(Heroicon::OutlinedRocketLaunch)
+                        ->color('success')
+                        ->visible(fn (ProcessDefinition $r) => $r->status === ProcessDefinitionStatus::Draft)
+                        ->requiresConfirmation()
+                        ->action(function (ProcessDefinition $r) {
+                            ProcessDefinition::where('organization_id', $r->organization_id)
+                                ->where('process_key', $r->process_key)
+                                ->where('id', '!=', $r->id)
+                                ->update(['is_latest' => false]);
 
-                        $r->update([
-                            'status' => ProcessDefinitionStatus::Published,
-                            'is_latest' => true,
-                            'published_by_user_id' => auth()->id(),
-                            'published_at' => now(),
-                        ]);
-                    }),
+                            $r->update([
+                                'status' => ProcessDefinitionStatus::Published,
+                                'is_latest' => true,
+                                'published_by_user_id' => auth()->id(),
+                                'published_at' => now(),
+                            ]);
+                        }),
 
-                Tables\Actions\Action::make('deprecate')
-                    ->label('منسوخ')
-                    ->icon('heroicon-o-archive-box')
-                    ->color('warning')
-                    ->visible(fn (ProcessDefinition $r) => $r->status === ProcessDefinitionStatus::Published)
-                    ->requiresConfirmation()
-                    ->action(fn (ProcessDefinition $r) => $r->update([
-                        'status' => ProcessDefinitionStatus::Deprecated,
-                        'is_latest' => false,
-                    ])),
+                    Action::make('deprecate')
+                        ->label('منسوخ')
+                        ->icon(Heroicon::OutlinedArchiveBox)
+                        ->color('warning')
+                        ->visible(fn (ProcessDefinition $r) => $r->status === ProcessDefinitionStatus::Published)
+                        ->requiresConfirmation()
+                        ->action(fn (ProcessDefinition $r) => $r->update([
+                            'status' => ProcessDefinitionStatus::Deprecated,
+                            'is_latest' => false,
+                        ])),
+                ]),
             ])
             ->defaultSort('updated_at', 'desc');
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            RelationManagers\ElementsRelationManager::class,
-            RelationManagers\InstancesRelationManager::class,
-        ];
     }
 
     public static function getPages(): array

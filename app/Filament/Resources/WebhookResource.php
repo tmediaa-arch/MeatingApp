@@ -6,21 +6,31 @@ namespace App\Filament\Resources;
 
 use App\Domains\Integrations\Enums\IntegrationHealthStatus;
 use App\Domains\Integrations\Models\ApiWebhook;
+use App\Filament\Admin\Schemas\FormLayout;
 use App\Filament\Resources\WebhookResource\Pages;
-use App\Filament\Resources\WebhookResource\RelationManagers;
-use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\KeyValue;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 
 class WebhookResource extends Resource
 {
     protected static ?string $model = ApiWebhook::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-arrow-up-tray';
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedArrowUpTray;
     protected static ?string $navigationGroup = 'یکپارچه‌سازی';
     protected static ?int $navigationSort = 2;
+    protected static ?string $recordTitleAttribute = 'name';
 
     public static function getModelLabel(): string
     {
@@ -32,9 +42,6 @@ class WebhookResource extends Resource
         return 'Webhookها';
     }
 
-    /**
-     * Events قابل ارسال — لیست استاتیک از همه domain events
-     */
     private static function availableEvents(): array
     {
         return [
@@ -55,44 +62,57 @@ class WebhookResource extends Resource
         ];
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form->schema([
-            Forms\Components\Section::make('اطلاعات Webhook')->schema([
-                Forms\Components\TextInput::make('name')
-                    ->label('نام')->required()->maxLength(200),
-                Forms\Components\TextInput::make('url')
-                    ->label('URL مقصد')->url()->required()->maxLength(500),
-                Forms\Components\Toggle::make('is_active')->label('فعال')->default(true),
-                Forms\Components\Toggle::make('verify_ssl')->label('بررسی SSL')->default(true),
-            ])->columns(2),
-
-            Forms\Components\Section::make('Events')->schema([
-                Forms\Components\CheckboxList::make('events')
-                    ->label('رویدادهای تحت گوش')
-                    ->options(self::availableEvents())
+        return $schema->components(FormLayout::withSidebar(
+            main: [
+                Section::make('اطلاعات Webhook')
                     ->columns(2)
-                    ->required(),
-            ]),
+                    ->schema([
+                        TextInput::make('name')
+                            ->label('نام')->required()->maxLength(200),
+                        TextInput::make('url')
+                            ->label('URL مقصد')->url()->required()->maxLength(500),
+                    ]),
 
-            Forms\Components\Section::make('پیکربندی Delivery')->schema([
-                Forms\Components\TextInput::make('max_retries')->label('حداکثر تلاش')->numeric()->default(5),
-                Forms\Components\TextInput::make('timeout_seconds')->label('Timeout (ثانیه)')->numeric()->default(30),
-                Forms\Components\TextInput::make('secret')
-                    ->label('Secret')
-                    ->helperText('برای امضای HMAC — در صورت خالی بودن، خودکار تولید می‌شود')
-                    ->password()
-                    ->revealable()
-                    ->default(fn () => ApiWebhook::generateSecret())
-                    ->required(),
-            ])->columns(3),
+                Section::make('Events')->schema([
+                    CheckboxList::make('events')
+                        ->label('رویدادهای تحت گوش')
+                        ->options(self::availableEvents())
+                        ->columns(2)
+                        ->required(),
+                ]),
 
-            Forms\Components\Section::make('Headers اضافی')->schema([
-                Forms\Components\KeyValue::make('headers')
-                    ->label('Headers')
-                    ->columnSpanFull(),
-            ])->collapsible(),
-        ]);
+                Section::make('پیکربندی Delivery')
+                    ->columns(3)
+                    ->schema([
+                        TextInput::make('max_retries')->label('حداکثر تلاش')->numeric()->default(5),
+                        TextInput::make('timeout_seconds')->label('Timeout (ثانیه)')->numeric()->default(30),
+                        TextInput::make('secret')
+                            ->label('Secret')
+                            ->helperText('برای امضای HMAC — در صورت خالی بودن، خودکار تولید می‌شود')
+                            ->password()
+                            ->revealable()
+                            ->default(fn () => ApiWebhook::generateSecret())
+                            ->required(),
+                    ]),
+
+                Section::make('Headers اضافی')
+                    ->collapsible()
+                    ->schema([
+                        KeyValue::make('headers')
+                            ->label('Headers')
+                            ->columnSpanFull(),
+                    ]),
+            ],
+            sidebar: [
+                Section::make('وضعیت')
+                    ->schema([
+                        Toggle::make('is_active')->label('فعال')->default(true),
+                        Toggle::make('verify_ssl')->label('بررسی SSL')->default(true),
+                    ]),
+            ],
+        ));
     }
 
     public static function table(Table $table): Table
@@ -107,9 +127,7 @@ class WebhookResource extends Resource
                     ->badge(),
                 Tables\Columns\IconColumn::make('is_active')->label('فعال')->boolean(),
                 Tables\Columns\TextColumn::make('health_status')
-                    ->label('سلامت')->badge()
-                    ->formatStateUsing(fn ($state) => $state instanceof IntegrationHealthStatus ? $state->label() : $state)
-                    ->color(fn ($state) => $state instanceof IntegrationHealthStatus ? $state->color() : 'gray'),
+                    ->label('سلامت')->badge(),
                 Tables\Columns\TextColumn::make('consecutive_failures')
                     ->label('شکست‌های متوالی')->badge()
                     ->color(fn ($state) => $state > 5 ? 'danger' : ($state > 0 ? 'warning' : 'success')),
@@ -117,19 +135,14 @@ class WebhookResource extends Resource
                     ->label('آخرین موفقیت')->dateTime('Y-m-d H:i'),
             ])
             ->filters([
-                Tables\Filters\TernaryFilter::make('is_active'),
+                TernaryFilter::make('is_active'),
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+            ->recordActions([
+                ActionGroup::make([
+                    EditAction::make(),
+                    DeleteAction::make(),
+                ]),
             ]);
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            RelationManagers\DeliveriesRelationManager::class,
-        ];
     }
 
     public static function getPages(): array

@@ -10,21 +10,27 @@ use App\Domains\Workflow\Actions\SuspendInstanceAction;
 use App\Domains\Workflow\Enums\ProcessInstanceStatus;
 use App\Domains\Workflow\Models\ProcessInstance;
 use App\Filament\Resources\ProcessInstanceResource\Pages;
-use App\Filament\Resources\ProcessInstanceResource\RelationManagers;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Textarea;
-use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 class ProcessInstanceResource extends Resource
 {
     protected static ?string $model = ProcessInstance::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-play-circle';
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedPlayCircle;
     protected static ?string $navigationGroup = 'گردش کار';
     protected static ?int $navigationSort = 20;
+    protected static ?string $recordTitleAttribute = 'instance_uuid';
 
     public static function getModelLabel(): string
     {
@@ -36,9 +42,9 @@ class ProcessInstanceResource extends Resource
         return 'Instanceها';
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form->schema([]); // فقط view و actions
+        return $schema->components([]);
     }
 
     public static function table(Table $table): Table
@@ -69,9 +75,7 @@ class ProcessInstanceResource extends Resource
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('وضعیت')
-                    ->badge()
-                    ->color(fn (ProcessInstanceStatus $s) => $s->color())
-                    ->formatStateUsing(fn (ProcessInstanceStatus $s) => $s->label()),
+                    ->badge(),
 
                 Tables\Columns\TextColumn::make('priority')
                     ->label('اولویت')
@@ -107,11 +111,11 @@ class ProcessInstanceResource extends Resource
                     ->color(fn ($state) => $state > 0 ? 'danger' : 'gray'),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('status')
+                SelectFilter::make('status')
                     ->label('وضعیت')
-                    ->options(ProcessInstanceStatus::options()),
+                    ->options(ProcessInstanceStatus::class),
 
-                Tables\Filters\SelectFilter::make('process_key')
+                SelectFilter::make('process_key')
                     ->label('فرایند')
                     ->options(fn () => \App\Domains\Workflow\Models\ProcessDefinition::query()
                         ->select('process_key')
@@ -119,80 +123,71 @@ class ProcessInstanceResource extends Resource
                         ->pluck('process_key', 'process_key')
                         ->toArray()),
 
-                Tables\Filters\Filter::make('sla_breached')
+                Filter::make('sla_breached')
                     ->label('فقط SLA رد شده')
                     ->query(fn ($q) => $q->slaBreached()),
 
-                Tables\Filters\Filter::make('with_incidents')
+                Filter::make('with_incidents')
                     ->label('فقط با Incident')
                     ->query(fn ($q) => $q->has('openIncidents')),
             ])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
+            ->recordActions([
+                ActionGroup::make([
+                    ViewAction::make(),
 
-                Tables\Actions\Action::make('suspend')
-                    ->label('توقف')
-                    ->icon('heroicon-o-pause-circle')
-                    ->color('warning')
-                    ->visible(fn (ProcessInstance $r) => $r->status === ProcessInstanceStatus::Running)
-                    ->requiresConfirmation()
-                    ->form([
-                        Textarea::make('reason')->label('دلیل')->rows(2),
-                    ])
-                    ->action(function (ProcessInstance $r, array $data) {
-                        try {
-                            app(SuspendInstanceAction::class)->execute($r, auth()->user(), $data['reason'] ?? null);
-                            Notification::make()->title('instance متوقف شد')->success()->send();
-                        } catch (\Throwable $e) {
-                            Notification::make()->title('خطا')->body($e->getMessage())->danger()->send();
-                        }
-                    }),
+                    Action::make('suspend')
+                        ->label('توقف')
+                        ->icon(Heroicon::OutlinedPauseCircle)
+                        ->color('warning')
+                        ->visible(fn (ProcessInstance $r) => $r->status === ProcessInstanceStatus::Running)
+                        ->requiresConfirmation()
+                        ->schema([
+                            Textarea::make('reason')->label('دلیل')->rows(2),
+                        ])
+                        ->action(function (ProcessInstance $r, array $data) {
+                            try {
+                                app(SuspendInstanceAction::class)->execute($r, auth()->user(), $data['reason'] ?? null);
+                                Notification::make()->title('instance متوقف شد')->success()->send();
+                            } catch (\Throwable $e) {
+                                Notification::make()->title('خطا')->body($e->getMessage())->danger()->send();
+                            }
+                        }),
 
-                Tables\Actions\Action::make('resume')
-                    ->label('ادامه')
-                    ->icon('heroicon-o-play-circle')
-                    ->color('success')
-                    ->visible(fn (ProcessInstance $r) => $r->status === ProcessInstanceStatus::Suspended)
-                    ->requiresConfirmation()
-                    ->action(function (ProcessInstance $r) {
-                        try {
-                            app(ResumeInstanceAction::class)->execute($r, auth()->user());
-                            Notification::make()->title('instance ادامه یافت')->success()->send();
-                        } catch (\Throwable $e) {
-                            Notification::make()->title('خطا')->body($e->getMessage())->danger()->send();
-                        }
-                    }),
+                    Action::make('resume')
+                        ->label('ادامه')
+                        ->icon(Heroicon::OutlinedPlayCircle)
+                        ->color('success')
+                        ->visible(fn (ProcessInstance $r) => $r->status === ProcessInstanceStatus::Suspended)
+                        ->requiresConfirmation()
+                        ->action(function (ProcessInstance $r) {
+                            try {
+                                app(ResumeInstanceAction::class)->execute($r, auth()->user());
+                                Notification::make()->title('instance ادامه یافت')->success()->send();
+                            } catch (\Throwable $e) {
+                                Notification::make()->title('خطا')->body($e->getMessage())->danger()->send();
+                            }
+                        }),
 
-                Tables\Actions\Action::make('cancel')
-                    ->label('لغو')
-                    ->icon('heroicon-o-x-circle')
-                    ->color('danger')
-                    ->visible(fn (ProcessInstance $r) => !$r->status->isTerminal())
-                    ->requiresConfirmation()
-                    ->form([
-                        Textarea::make('reason')->label('دلیل لغو')->required()->rows(2),
-                    ])
-                    ->action(function (ProcessInstance $r, array $data) {
-                        try {
-                            app(CancelInstanceAction::class)->execute($r, auth()->user(), $data['reason']);
-                            Notification::make()->title('instance لغو شد')->success()->send();
-                        } catch (\Throwable $e) {
-                            Notification::make()->title('خطا')->body($e->getMessage())->danger()->send();
-                        }
-                    }),
+                    Action::make('cancel')
+                        ->label('لغو')
+                        ->icon(Heroicon::OutlinedXCircle)
+                        ->color('danger')
+                        ->visible(fn (ProcessInstance $r) => !$r->status->isTerminal())
+                        ->requiresConfirmation()
+                        ->schema([
+                            Textarea::make('reason')->label('دلیل لغو')->required()->rows(2),
+                        ])
+                        ->action(function (ProcessInstance $r, array $data) {
+                            try {
+                                app(CancelInstanceAction::class)->execute($r, auth()->user(), $data['reason']);
+                                Notification::make()->title('instance لغو شد')->success()->send();
+                            } catch (\Throwable $e) {
+                                Notification::make()->title('خطا')->body($e->getMessage())->danger()->send();
+                            }
+                        }),
+                ]),
             ])
             ->defaultSort('started_at', 'desc');
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            RelationManagers\TokensRelationManager::class,
-            RelationManagers\UserTasksRelationManager::class,
-            RelationManagers\VariablesRelationManager::class,
-            RelationManagers\HistoryRelationManager::class,
-            RelationManagers\IncidentsRelationManager::class,
-        ];
     }
 
     public static function getPages(): array

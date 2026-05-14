@@ -1,8 +1,9 @@
 <?php
+
 declare(strict_types=1);
+
 namespace App\Filament\Resources\TaskResource\RelationManagers;
 
-use App\Domains\Tasks\Enums\TaskUpdateType;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -20,8 +21,7 @@ class UpdatesRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('updater.name')->label('توسط'),
                 Tables\Columns\TextColumn::make('update_type')
                     ->label('نوع')
-                    ->badge()
-                    ->formatStateUsing(fn (TaskUpdateType $t) => $t->label()),
+                    ->badge(),
                 Tables\Columns\TextColumn::make('content')->label('توضیحات')->limit(80),
                 Tables\Columns\TextColumn::make('status_change')
                     ->label('تغییر وضعیت')

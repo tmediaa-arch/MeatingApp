@@ -1,7 +1,10 @@
 <?php
+
 declare(strict_types=1);
+
 namespace App\Filament\Resources\TaskResource\Pages;
 
+use App\Domains\Organization\Models\Employee;
 use App\Domains\Tasks\Actions\AssignTaskAction;
 use App\Domains\Tasks\Actions\CompleteTaskAction;
 use App\Domains\Tasks\Actions\RequestExtensionAction;
@@ -9,12 +12,13 @@ use App\Domains\Tasks\Actions\SubmitTaskAction;
 use App\Domains\Tasks\Actions\TransitionTaskStatusAction;
 use App\Domains\Tasks\Actions\UpdateTaskProgressAction;
 use App\Domains\Tasks\Enums\TaskStatus;
-use App\Domains\Organization\Models\Employee;
 use App\Filament\Resources\TaskResource;
+use Ariaieboy\Jalali\Forms\Components\JalaliDatePicker;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Support\Icons\Heroicon;
 
 class ViewTask extends ViewRecord
 {
@@ -27,11 +31,11 @@ class ViewTask extends ViewRecord
 
             Actions\Action::make('assign')
                 ->label('ارجاع')
-                ->icon('heroicon-o-user-plus')
+                ->icon(Heroicon::OutlinedUserPlus)
                 ->color('info')
                 ->visible(fn () => auth()->user()->can('assign', $this->record)
                     && $this->record->status === TaskStatus::Open)
-                ->form([
+                ->schema([
                     Forms\Components\Select::make('assignee_employee_id')
                         ->label('مجری')
                         ->relationship('assignee', 'first_name')
@@ -55,10 +59,10 @@ class ViewTask extends ViewRecord
 
             Actions\Action::make('updateProgress')
                 ->label('به‌روزرسانی پیشرفت')
-                ->icon('heroicon-o-chart-bar')
+                ->icon(Heroicon::OutlinedChartBar)
                 ->color('primary')
                 ->visible(fn () => $this->record->canBeUpdatedBy(auth()->user()))
-                ->form([
+                ->schema([
                     Forms\Components\TextInput::make('progress_percent')
                         ->label('درصد پیشرفت')
                         ->numeric()
@@ -78,11 +82,11 @@ class ViewTask extends ViewRecord
 
             Actions\Action::make('submit')
                 ->label('ارسال')
-                ->icon('heroicon-o-paper-airplane')
+                ->icon(Heroicon::OutlinedPaperAirplane)
                 ->color('warning')
                 ->visible(fn () => auth()->user()->can('submit', $this->record)
                     && in_array($this->record->status, [TaskStatus::InProgress, TaskStatus::NeedsRevision]))
-                ->form([
+                ->schema([
                     Forms\Components\Textarea::make('result_summary')
                         ->label('خلاصه نتایج')
                         ->rows(3)
@@ -99,11 +103,11 @@ class ViewTask extends ViewRecord
 
             Actions\Action::make('approve')
                 ->label('تأیید')
-                ->icon('heroicon-o-check-badge')
+                ->icon(Heroicon::OutlinedCheckBadge)
                 ->color('success')
                 ->visible(fn () => auth()->user()->can('approve', $this->record)
                     && in_array($this->record->status, [TaskStatus::Submitted, TaskStatus::UnderReview]))
-                ->form([
+                ->schema([
                     Forms\Components\Select::make('quality')
                         ->label('کیفیت')
                         ->options([
@@ -127,11 +131,11 @@ class ViewTask extends ViewRecord
 
             Actions\Action::make('needsRevision')
                 ->label('نیاز به اصلاح')
-                ->icon('heroicon-o-arrow-uturn-left')
+                ->icon(Heroicon::OutlinedArrowUturnLeft)
                 ->color('danger')
                 ->visible(fn () => auth()->user()->can('approve', $this->record)
                     && in_array($this->record->status, [TaskStatus::Submitted, TaskStatus::UnderReview]))
-                ->form([
+                ->schema([
                     Forms\Components\Textarea::make('reason')->label('علت برگشت')->rows(3)->required(),
                 ])
                 ->action(function (array $data) {
@@ -145,11 +149,11 @@ class ViewTask extends ViewRecord
 
             Actions\Action::make('requestExtension')
                 ->label('درخواست تمدید')
-                ->icon('heroicon-o-clock')
+                ->icon(Heroicon::OutlinedClock)
                 ->color('warning')
                 ->visible(fn () => auth()->user()->can('requestExtension', $this->record))
-                ->form([
-                    Forms\Components\DatePicker::make('new_due_date')
+                ->schema([
+                    JalaliDatePicker::make('new_due_date')
                         ->label('مهلت جدید')
                         ->required()
                         ->after('today'),

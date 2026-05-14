@@ -1,8 +1,9 @@
 <?php
+
 declare(strict_types=1);
+
 namespace App\Filament\Resources\ResolutionResource\RelationManagers;
 
-use App\Domains\Tasks\Enums\TaskStatus;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -21,9 +22,7 @@ class TasksRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('assignee.full_name')->label('مجری'),
                 Tables\Columns\TextColumn::make('status')
                     ->label('وضعیت')
-                    ->badge()
-                    ->color(fn (TaskStatus $s) => $s->color())
-                    ->formatStateUsing(fn (TaskStatus $s) => $s->label()),
+                    ->badge(),
                 Tables\Columns\ProgressColumn::make('progress_percent')->label('پیشرفت'),
                 Tables\Columns\TextColumn::make('due_date')->label('مهلت')->date('Y/m/d'),
             ]);

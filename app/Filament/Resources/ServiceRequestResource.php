@@ -5,19 +5,30 @@ declare(strict_types=1);
 namespace App\Filament\Resources;
 
 use App\Domains\ServiceRequests\Actions\ApproveServiceRequestAction;
-use App\Domains\ServiceRequests\Actions\AssignServiceRequestAction;
 use App\Domains\ServiceRequests\Actions\CompleteServiceRequestAction;
 use App\Domains\ServiceRequests\Actions\RejectServiceRequestAction;
 use App\Domains\ServiceRequests\Actions\SubmitServiceRequestAction;
 use App\Domains\ServiceRequests\Enums\ServiceRequestStatus;
 use App\Domains\ServiceRequests\Enums\ServiceRequestType;
 use App\Domains\ServiceRequests\Models\ServiceRequest;
+use App\Filament\Admin\Schemas\FormLayout;
 use App\Filament\Resources\ServiceRequestResource\Pages;
-use Filament\Forms;
-use Filament\Forms\Form;
+use Ariaieboy\Jalali\Forms\Components\JalaliDateTimePicker;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -25,9 +36,10 @@ class ServiceRequestResource extends Resource
 {
     protected static ?string $model = ServiceRequest::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentList;
     protected static ?string $navigationGroup = 'درخواست‌های جانبی';
     protected static ?int $navigationSort = 10;
+    protected static ?string $recordTitleAttribute = 'title';
 
     public static function getModelLabel(): string
     {
@@ -39,79 +51,92 @@ class ServiceRequestResource extends Resource
         return 'درخواست‌های جانبی';
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form->schema([
-            Forms\Components\Section::make('مشخصات درخواست')->schema([
-                Forms\Components\Select::make('type')
-                    ->label('نوع')
-                    ->options(ServiceRequestType::options())
-                    ->required()
-                    ->reactive(),
+        return $schema->components(FormLayout::withSidebar(
+            main: [
+                Section::make('مشخصات درخواست')
+                    ->columns(2)
+                    ->schema([
+                        Select::make('type')
+                            ->label('نوع')
+                            ->options(ServiceRequestType::class)
+                            ->required()
+                            ->live(),
 
-                Forms\Components\TextInput::make('title')
-                    ->label('عنوان')
-                    ->required()
-                    ->maxLength(255),
+                        TextInput::make('title')
+                            ->label('عنوان')
+                            ->required()
+                            ->maxLength(255),
 
-                Forms\Components\Textarea::make('description')
-                    ->label('شرح')
-                    ->rows(3)
-                    ->columnSpanFull(),
+                        Textarea::make('description')
+                            ->label('شرح')
+                            ->rows(3)
+                            ->columnSpanFull(),
 
-                Forms\Components\Select::make('priority')
-                    ->label('اولویت')
-                    ->options([
-                        'low' => 'پایین',
-                        'normal' => 'عادی',
-                        'high' => 'بالا',
-                        'critical' => 'بحرانی',
-                    ])
-                    ->default('normal'),
+                        JalaliDateTimePicker::make('required_at')
+                            ->label('زمان مورد نیاز')
+                            ->required()
+                            ->minDate(now()),
 
-                Forms\Components\DateTimePicker::make('required_at')
-                    ->label('زمان مورد نیاز')
-                    ->required()
-                    ->minDate(now()),
+                        TextInput::make('estimated_duration_minutes')
+                            ->label('مدت تخمینی (دقیقه)')
+                            ->numeric(),
+                    ]),
 
-                Forms\Components\TextInput::make('estimated_duration_minutes')
-                    ->label('مدت تخمینی (دقیقه)')
-                    ->numeric(),
-            ])->columns(2),
+                Section::make('اطلاعات اختصاصی نوع')
+                    ->columns(2)
+                    ->schema(function ($get) {
+                        $type = ServiceRequestType::tryFrom($get('type') ?? '');
+                        if (! $type) {
+                            return [];
+                        }
 
-            Forms\Components\Section::make('اطلاعات اختصاصی نوع')
-                ->schema(function (Forms\Get $get) {
-                    $type = ServiceRequestType::tryFrom($get('type') ?? '');
-                    if (!$type) return [];
+                        return collect($type->typeSpecificFields())
+                            ->map(fn ($label, $key) => TextInput::make("type_specific_data.{$key}")
+                                ->label($label))
+                            ->values()
+                            ->all();
+                    })
+                    ->visible(fn ($get) => filled($get('type'))),
 
-                    return collect($type->typeSpecificFields())
-                        ->map(fn ($label, $key) => Forms\Components\TextInput::make("type_specific_data.{$key}")
-                            ->label($label))
-                        ->values()
-                        ->all();
-                })
-                ->columns(2)
-                ->visible(fn (Forms\Get $get) => filled($get('type'))),
+                Section::make('ارتباط با جلسه و واحد')
+                    ->columns(2)
+                    ->collapsible()
+                    ->schema([
+                        Select::make('meeting_id')
+                            ->label('جلسه مرتبط')
+                            ->relationship('meeting', 'subject')
+                            ->searchable()
+                            ->preload(),
 
-            Forms\Components\Section::make('ارتباط با جلسه و واحد')->schema([
-                Forms\Components\Select::make('meeting_id')
-                    ->label('جلسه مرتبط')
-                    ->relationship('meeting', 'subject')
-                    ->searchable()
-                    ->preload(),
+                        Select::make('provider_unit_id')
+                            ->label('واحد ارائه‌دهنده')
+                            ->relationship('providerUnit', 'name')
+                            ->searchable()
+                            ->preload(),
 
-                Forms\Components\Select::make('provider_unit_id')
-                    ->label('واحد ارائه‌دهنده')
-                    ->relationship('providerUnit', 'name')
-                    ->searchable()
-                    ->preload(),
-
-                Forms\Components\TextInput::make('estimated_cost')
-                    ->label('هزینه تخمینی')
-                    ->numeric()
-                    ->prefix('﷼'),
-            ])->columns(2)->collapsible(),
-        ]);
+                        TextInput::make('estimated_cost')
+                            ->label('هزینه تخمینی')
+                            ->numeric()
+                            ->prefix('﷼'),
+                    ]),
+            ],
+            sidebar: [
+                Section::make('اولویت')
+                    ->schema([
+                        Select::make('priority')
+                            ->label('اولویت')
+                            ->options([
+                                'low' => 'پایین',
+                                'normal' => 'عادی',
+                                'high' => 'بالا',
+                                'critical' => 'بحرانی',
+                            ])
+                            ->default('normal'),
+                    ]),
+            ],
+        ));
     }
 
     public static function table(Table $table): Table
@@ -125,10 +150,7 @@ class ServiceRequestResource extends Resource
 
                 Tables\Columns\TextColumn::make('type')
                     ->label('نوع')
-                    ->badge()
-                    ->color(fn (ServiceRequestType $t) => $t->color())
-                    ->formatStateUsing(fn (ServiceRequestType $t) => $t->label())
-                    ->icon(fn (ServiceRequestType $t) => $t->icon()),
+                    ->badge(),
 
                 Tables\Columns\TextColumn::make('title')
                     ->label('عنوان')
@@ -147,9 +169,7 @@ class ServiceRequestResource extends Resource
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('وضعیت')
-                    ->badge()
-                    ->color(fn (ServiceRequestStatus $s) => $s->color())
-                    ->formatStateUsing(fn (ServiceRequestStatus $s) => $s->label()),
+                    ->badge(),
 
                 Tables\Columns\TextColumn::make('required_at')
                     ->label('زمان نیاز')
@@ -176,89 +196,91 @@ class ServiceRequestResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('type')
+                SelectFilter::make('type')
                     ->label('نوع')
-                    ->options(ServiceRequestType::options()),
+                    ->options(ServiceRequestType::class),
 
-                Tables\Filters\SelectFilter::make('status')
+                SelectFilter::make('status')
                     ->label('وضعیت')
-                    ->options(ServiceRequestStatus::options()),
+                    ->options(ServiceRequestStatus::class),
 
-                Tables\Filters\Filter::make('mine')
+                Filter::make('mine')
                     ->label('فقط درخواست‌های من')
                     ->query(fn (Builder $q) => $q->where('requester_user_id', auth()->id())),
 
-                Tables\Filters\Filter::make('overdue')
+                Filter::make('overdue')
                     ->label('فقط overdue')
                     ->query(fn (Builder $q) => $q->overdue()),
             ])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make()
-                    ->visible(fn (ServiceRequest $r) => $r->status === ServiceRequestStatus::Draft
-                        && $r->requester_user_id === auth()->id()),
+            ->recordActions([
+                ActionGroup::make([
+                    ViewAction::make(),
+                    EditAction::make()
+                        ->visible(fn (ServiceRequest $r) => $r->status === ServiceRequestStatus::Draft
+                            && $r->requester_user_id === auth()->id()),
 
-                Tables\Actions\Action::make('submit')
-                    ->label('ارسال برای بررسی')
-                    ->icon('heroicon-o-paper-airplane')
-                    ->color('success')
-                    ->visible(fn (ServiceRequest $r) => $r->status === ServiceRequestStatus::Draft)
-                    ->requiresConfirmation()
-                    ->action(function (ServiceRequest $r) {
-                        app(SubmitServiceRequestAction::class)->execute($r, auth()->user());
-                        Notification::make()->title('درخواست ارسال شد')->success()->send();
-                    }),
+                    Action::make('submit')
+                        ->label('ارسال برای بررسی')
+                        ->icon(Heroicon::OutlinedPaperAirplane)
+                        ->color('success')
+                        ->visible(fn (ServiceRequest $r) => $r->status === ServiceRequestStatus::Draft)
+                        ->requiresConfirmation()
+                        ->action(function (ServiceRequest $r) {
+                            app(SubmitServiceRequestAction::class)->execute($r, auth()->user());
+                            Notification::make()->title('درخواست ارسال شد')->success()->send();
+                        }),
 
-                Tables\Actions\Action::make('approve')
-                    ->label('تأیید')
-                    ->icon('heroicon-o-check-circle')
-                    ->color('success')
-                    ->visible(fn (ServiceRequest $r) => in_array($r->status, [
-                        ServiceRequestStatus::Submitted,
-                        ServiceRequestStatus::UnderReview,
-                    ], true))
-                    ->form([
-                        Forms\Components\Textarea::make('comment')->label('یادداشت')->rows(2),
-                    ])
-                    ->action(function (ServiceRequest $r, array $data) {
-                        app(ApproveServiceRequestAction::class)->execute($r, auth()->user(), $data['comment'] ?? null);
-                        Notification::make()->title('تأیید شد')->success()->send();
-                    }),
+                    Action::make('approve')
+                        ->label('تأیید')
+                        ->icon(Heroicon::OutlinedCheckCircle)
+                        ->color('success')
+                        ->visible(fn (ServiceRequest $r) => in_array($r->status, [
+                            ServiceRequestStatus::Submitted,
+                            ServiceRequestStatus::UnderReview,
+                        ], true))
+                        ->schema([
+                            Textarea::make('comment')->label('یادداشت')->rows(2),
+                        ])
+                        ->action(function (ServiceRequest $r, array $data) {
+                            app(ApproveServiceRequestAction::class)->execute($r, auth()->user(), $data['comment'] ?? null);
+                            Notification::make()->title('تأیید شد')->success()->send();
+                        }),
 
-                Tables\Actions\Action::make('reject')
-                    ->label('رد')
-                    ->icon('heroicon-o-x-circle')
-                    ->color('danger')
-                    ->visible(fn (ServiceRequest $r) => in_array($r->status, [
-                        ServiceRequestStatus::Submitted,
-                        ServiceRequestStatus::UnderReview,
-                    ], true))
-                    ->form([
-                        Forms\Components\Textarea::make('reason')->label('دلیل رد')->required()->rows(2),
-                    ])
-                    ->action(function (ServiceRequest $r, array $data) {
-                        app(RejectServiceRequestAction::class)->execute($r, auth()->user(), $data['reason']);
-                        Notification::make()->title('رد شد')->warning()->send();
-                    }),
+                    Action::make('reject')
+                        ->label('رد')
+                        ->icon(Heroicon::OutlinedXCircle)
+                        ->color('danger')
+                        ->visible(fn (ServiceRequest $r) => in_array($r->status, [
+                            ServiceRequestStatus::Submitted,
+                            ServiceRequestStatus::UnderReview,
+                        ], true))
+                        ->schema([
+                            Textarea::make('reason')->label('دلیل رد')->required()->rows(2),
+                        ])
+                        ->action(function (ServiceRequest $r, array $data) {
+                            app(RejectServiceRequestAction::class)->execute($r, auth()->user(), $data['reason']);
+                            Notification::make()->title('رد شد')->warning()->send();
+                        }),
 
-                Tables\Actions\Action::make('complete')
-                    ->label('تکمیل')
-                    ->icon('heroicon-o-flag')
-                    ->color('success')
-                    ->visible(fn (ServiceRequest $r) => $r->status === ServiceRequestStatus::InProgress)
-                    ->form([
-                        Forms\Components\TextInput::make('actual_cost')->label('هزینه واقعی')->numeric()->prefix('﷼'),
-                        Forms\Components\Textarea::make('comment')->label('یادداشت تکمیل')->rows(2),
-                    ])
-                    ->action(function (ServiceRequest $r, array $data) {
-                        app(CompleteServiceRequestAction::class)->execute(
-                            $r,
-                            auth()->user(),
-                            $data['actual_cost'] ?? null,
-                            $data['comment'] ?? null,
-                        );
-                        Notification::make()->title('تکمیل شد')->success()->send();
-                    }),
+                    Action::make('complete')
+                        ->label('تکمیل')
+                        ->icon(Heroicon::OutlinedFlag)
+                        ->color('success')
+                        ->visible(fn (ServiceRequest $r) => $r->status === ServiceRequestStatus::InProgress)
+                        ->schema([
+                            TextInput::make('actual_cost')->label('هزینه واقعی')->numeric()->prefix('﷼'),
+                            Textarea::make('comment')->label('یادداشت تکمیل')->rows(2),
+                        ])
+                        ->action(function (ServiceRequest $r, array $data) {
+                            app(CompleteServiceRequestAction::class)->execute(
+                                $r,
+                                auth()->user(),
+                                $data['actual_cost'] ?? null,
+                                $data['comment'] ?? null,
+                            );
+                            Notification::make()->title('تکمیل شد')->success()->send();
+                        }),
+                ]),
             ])
             ->defaultSort('required_at', 'asc');
     }
