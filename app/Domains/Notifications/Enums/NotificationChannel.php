@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Domains\Notifications\Enums;
 
-enum NotificationChannel: string
+use Filament\Support\Contracts\HasIcon;
+use Filament\Support\Contracts\HasLabel;
+
+enum NotificationChannel: string implements HasIcon, HasLabel
 {
     case Email = 'email';
     case Sms = 'sms';
@@ -39,5 +42,15 @@ enum NotificationChannel: string
         return collect(self::cases())
             ->mapWithKeys(fn (self $s) => [$s->value => $s->label()])
             ->toArray();
+    }
+
+    public function getLabel(): string
+    {
+        return $this->label();
+    }
+
+    public function getIcon(): string|\BackedEnum|\Illuminate\Contracts\Support\Htmlable|null
+    {
+        return $this->icon();
     }
 }

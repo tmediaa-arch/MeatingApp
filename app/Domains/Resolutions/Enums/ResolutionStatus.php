@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Domains\Resolutions\Enums;
 
-enum ResolutionStatus: string
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
+
+enum ResolutionStatus: string implements HasColor, HasLabel
 {
     case Draft = 'draft';
     case Voted = 'voted';        // رأی‌گیری انجام شد
@@ -66,5 +69,15 @@ enum ResolutionStatus: string
         return collect(self::cases())
             ->mapWithKeys(fn (self $s) => [$s->value => $s->label()])
             ->toArray();
+    }
+
+    public function getLabel(): string
+    {
+        return $this->label();
+    }
+
+    public function getColor(): string|array|null
+    {
+        return $this->color();
     }
 }

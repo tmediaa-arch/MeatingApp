@@ -2,7 +2,10 @@
 declare(strict_types=1);
 namespace App\Domains\Tasks\Enums;
 
-enum TaskPriority: string
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
+
+enum TaskPriority: string implements HasColor, HasLabel
 {
     case Critical = 'critical';
     case High = 'high';
@@ -44,5 +47,15 @@ enum TaskPriority: string
         return collect(self::cases())
             ->mapWithKeys(fn (self $s) => [$s->value => $s->label()])
             ->toArray();
+    }
+
+    public function getLabel(): string
+    {
+        return $this->label();
+    }
+
+    public function getColor(): string|array|null
+    {
+        return $this->color();
     }
 }

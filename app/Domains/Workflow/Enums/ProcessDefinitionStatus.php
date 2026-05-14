@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Domains\Workflow\Enums;
 
-enum ProcessDefinitionStatus: string
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
+
+enum ProcessDefinitionStatus: string implements HasColor, HasLabel
 {
     case Draft = 'draft';
     case Published = 'published';
@@ -51,5 +54,15 @@ enum ProcessDefinitionStatus: string
         return collect(self::cases())
             ->mapWithKeys(fn ($s) => [$s->value => $s->label()])
             ->toArray();
+    }
+
+    public function getLabel(): string
+    {
+        return $this->label();
+    }
+
+    public function getColor(): string|array|null
+    {
+        return $this->color();
     }
 }

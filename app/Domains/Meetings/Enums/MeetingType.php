@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Domains\Meetings\Enums;
 
-enum MeetingType: string
+use Filament\Support\Contracts\HasLabel;
+
+enum MeetingType: string implements HasLabel
 {
     case Regular = 'regular';
     case Extraordinary = 'extraordinary';
@@ -32,5 +34,10 @@ enum MeetingType: string
         return collect(self::cases())
             ->mapWithKeys(fn ($c) => [$c->value => $c->label()])
             ->toArray();
+    }
+
+    public function getLabel(): string
+    {
+        return $this->label();
     }
 }

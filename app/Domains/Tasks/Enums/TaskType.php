@@ -2,7 +2,9 @@
 declare(strict_types=1);
 namespace App\Domains\Tasks\Enums;
 
-enum TaskType: string
+use Filament\Support\Contracts\HasLabel;
+
+enum TaskType: string implements HasLabel
 {
     case Action = 'action';
     case Document = 'document';
@@ -30,5 +32,10 @@ enum TaskType: string
         return collect(self::cases())
             ->mapWithKeys(fn (self $s) => [$s->value => $s->label()])
             ->toArray();
+    }
+
+    public function getLabel(): string
+    {
+        return $this->label();
     }
 }

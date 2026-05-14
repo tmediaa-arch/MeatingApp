@@ -13,6 +13,7 @@ use Filament\Actions;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Support\Icons\Heroicon;
 
 class ViewMeeting extends ViewRecord
 {
@@ -25,16 +26,14 @@ class ViewMeeting extends ViewRecord
                 ->visible(fn () => $this->record->status->isEditable()),
         ];
 
-        // اضافه کردن action transition براساس وضعیت
         foreach ($this->record->status->allowedTransitions() as $targetStatus) {
             $actions[] = $this->makeTransitionAction($targetStatus);
         }
 
-        // ارسال دعوت‌نامه‌ها
         if (in_array($this->record->status, [MeetingStatus::Scheduled, MeetingStatus::InvitationsSent], true)) {
             $actions[] = Actions\Action::make('send_invitations')
                 ->label('ارسال دعوت‌نامه‌ها')
-                ->icon('heroicon-o-paper-airplane')
+                ->icon(Heroicon::OutlinedPaperAirplane)
                 ->color('info')
                 ->requiresConfirmation()
                 ->action(function () {
@@ -64,7 +63,7 @@ class ViewMeeting extends ViewRecord
             ->modalHeading('تأیید تغییر وضعیت');
 
         if ($needsReason) {
-            $action->form([
+            $action->schema([
                 Textarea::make('reason')
                     ->label('دلیل')
                     ->required()

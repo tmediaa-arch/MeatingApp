@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Domains\VideoConference\Enums;
 
-enum HealthStatus: string
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
+
+enum HealthStatus: string implements HasColor, HasLabel
 {
     case Unknown = 'unknown';
     case Healthy = 'healthy';
@@ -34,5 +37,15 @@ enum HealthStatus: string
     public function isUsable(): bool
     {
         return in_array($this, [self::Healthy, self::Degraded, self::Unknown], true);
+    }
+
+    public function getLabel(): string
+    {
+        return $this->label();
+    }
+
+    public function getColor(): string|array|null
+    {
+        return $this->color();
     }
 }

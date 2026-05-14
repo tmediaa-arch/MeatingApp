@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Domains\VideoConference\Enums;
 
-enum VideoConferenceDriver: string
+use Filament\Support\Contracts\HasLabel;
+
+enum VideoConferenceDriver: string implements HasLabel
 {
     case Alocom = 'alocom';
     case Jitsi = 'jitsi';
@@ -53,5 +55,10 @@ enum VideoConferenceDriver: string
         return collect(self::cases())
             ->mapWithKeys(fn ($d) => [$d->value => $d->label()])
             ->toArray();
+    }
+
+    public function getLabel(): string
+    {
+        return $this->label();
     }
 }

@@ -2,7 +2,9 @@
 declare(strict_types=1);
 namespace App\Domains\Resolutions\Enums;
 
-enum ResolutionType: string
+use Filament\Support\Contracts\HasLabel;
+
+enum ResolutionType: string implements HasLabel
 {
     case Decision = 'decision';
     case Directive = 'directive';
@@ -28,5 +30,10 @@ enum ResolutionType: string
         return collect(self::cases())
             ->mapWithKeys(fn (self $s) => [$s->value => $s->label()])
             ->toArray();
+    }
+
+    public function getLabel(): string
+    {
+        return $this->label();
     }
 }

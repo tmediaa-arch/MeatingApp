@@ -2,7 +2,9 @@
 declare(strict_types=1);
 namespace App\Domains\Tasks\Enums;
 
-enum TaskUpdateType: string
+use Filament\Support\Contracts\HasLabel;
+
+enum TaskUpdateType: string implements HasLabel
 {
     case Comment = 'comment';
     case StatusChange = 'status_change';
@@ -23,5 +25,10 @@ enum TaskUpdateType: string
             self::Extension => 'تمدید مهلت',
             self::Reassignment => 'تغییر مجری',
         };
+    }
+
+    public function getLabel(): string
+    {
+        return $this->label();
     }
 }

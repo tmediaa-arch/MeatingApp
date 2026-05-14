@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Domains\VideoConference\Enums;
 
-enum VideoConferenceRoomStatus: string
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
+
+enum VideoConferenceRoomStatus: string implements HasColor, HasLabel
 {
     case Scheduled = 'scheduled';
     case Starting = 'starting';
@@ -51,5 +54,15 @@ enum VideoConferenceRoomStatus: string
             self::InProgress => in_array($new, [self::Ended, self::Failed], true),
             default => false,
         };
+    }
+
+    public function getLabel(): string
+    {
+        return $this->label();
+    }
+
+    public function getColor(): string|array|null
+    {
+        return $this->color();
     }
 }

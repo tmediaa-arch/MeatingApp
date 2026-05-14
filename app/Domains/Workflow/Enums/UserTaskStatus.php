@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Domains\Workflow\Enums;
 
-enum UserTaskStatus: string
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
+
+enum UserTaskStatus: string implements HasColor, HasLabel
 {
     case Created = 'created';
     case Assigned = 'assigned';
@@ -45,5 +48,15 @@ enum UserTaskStatus: string
     public function isTerminal(): bool
     {
         return in_array($this, [self::Completed, self::Cancelled, self::Reassigned], true);
+    }
+
+    public function getLabel(): string
+    {
+        return $this->label();
+    }
+
+    public function getColor(): string|array|null
+    {
+        return $this->color();
     }
 }

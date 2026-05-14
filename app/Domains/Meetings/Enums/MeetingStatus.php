@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace App\Domains\Meetings\Enums;
 
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasIcon;
+use Filament\Support\Contracts\HasLabel;
+
 /**
  * چرخه عمر جلسه — state machine
  *
@@ -23,7 +27,7 @@ namespace App\Domains\Meetings\Enums;
  * Cancelled: لغو شده با ذکر دلیل
  * Postponed: به تعویق افتاد، انتظار زمان جدید
  */
-enum MeetingStatus: string
+enum MeetingStatus: string implements HasColor, HasIcon, HasLabel
 {
     case Draft = 'draft';
     case Scheduled = 'scheduled';
@@ -155,5 +159,20 @@ enum MeetingStatus: string
         return collect(self::cases())
             ->mapWithKeys(fn ($c) => [$c->value => $c->label()])
             ->toArray();
+    }
+
+    public function getLabel(): string
+    {
+        return $this->label();
+    }
+
+    public function getColor(): string|array|null
+    {
+        return $this->color();
+    }
+
+    public function getIcon(): string|\BackedEnum|\Illuminate\Contracts\Support\Htmlable|null
+    {
+        return $this->icon();
     }
 }

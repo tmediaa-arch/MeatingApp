@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources\MeetingResource\RelationManagers;
 
+use Filament\Actions\CreateAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 
@@ -18,58 +21,60 @@ class AgendaItemsRelationManager extends RelationManager
     protected static ?string $title = 'دستور جلسه';
     protected static ?string $recordTitleAttribute = 'title';
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form->schema([
-            TextInput::make('title')
-                ->label('عنوان')
-                ->required()
-                ->maxLength(500)
-                ->columnSpanFull(),
-            Textarea::make('description')
-                ->label('توضیحات')
-                ->rows(3)
-                ->columnSpanFull(),
-            Select::make('presenter_employee_id')
-                ->label('ارائه‌دهنده')
-                ->relationship('presenter', 'first_name')
-                ->getOptionLabelFromRecordUsing(fn ($r) => $r->full_name)
-                ->searchable()
-                ->preload(),
-            TextInput::make('estimated_duration_minutes')
-                ->label('مدت تخمینی (دقیقه)')
-                ->numeric()
-                ->default(15)
-                ->minValue(1)
-                ->maxValue(480),
-            Select::make('item_type')
-                ->label('نوع')
-                ->options([
-                    'discussion' => 'بحث',
-                    'decision' => 'تصمیم‌گیری',
-                    'information' => 'اطلاع‌رسانی',
-                    'presentation' => 'ارائه',
-                    'voting' => 'رأی‌گیری',
-                    'review' => 'بازبینی',
-                    'other' => 'سایر',
-                ])
-                ->default('discussion')
-                ->required(),
-            Select::make('status')
-                ->label('وضعیت')
-                ->options([
-                    'pending' => 'در انتظار',
-                    'in_progress' => 'در حال بحث',
-                    'discussed' => 'بحث شد',
-                    'deferred' => 'موکول شد',
-                    'cancelled' => 'لغو شد',
-                ])
-                ->default('pending'),
-            TextInput::make('order_index')
-                ->label('ترتیب')
-                ->numeric()
-                ->default(0),
-        ])->columns(2);
+        return $schema
+            ->columns(2)
+            ->components([
+                TextInput::make('title')
+                    ->label('عنوان')
+                    ->required()
+                    ->maxLength(500)
+                    ->columnSpanFull(),
+                Textarea::make('description')
+                    ->label('توضیحات')
+                    ->rows(3)
+                    ->columnSpanFull(),
+                Select::make('presenter_employee_id')
+                    ->label('ارائه‌دهنده')
+                    ->relationship('presenter', 'first_name')
+                    ->getOptionLabelFromRecordUsing(fn ($r) => $r->full_name)
+                    ->searchable()
+                    ->preload(),
+                TextInput::make('estimated_duration_minutes')
+                    ->label('مدت تخمینی (دقیقه)')
+                    ->numeric()
+                    ->default(15)
+                    ->minValue(1)
+                    ->maxValue(480),
+                Select::make('item_type')
+                    ->label('نوع')
+                    ->options([
+                        'discussion' => 'بحث',
+                        'decision' => 'تصمیم‌گیری',
+                        'information' => 'اطلاع‌رسانی',
+                        'presentation' => 'ارائه',
+                        'voting' => 'رأی‌گیری',
+                        'review' => 'بازبینی',
+                        'other' => 'سایر',
+                    ])
+                    ->default('discussion')
+                    ->required(),
+                Select::make('status')
+                    ->label('وضعیت')
+                    ->options([
+                        'pending' => 'در انتظار',
+                        'in_progress' => 'در حال بحث',
+                        'discussed' => 'بحث شد',
+                        'deferred' => 'موکول شد',
+                        'cancelled' => 'لغو شد',
+                    ])
+                    ->default('pending'),
+                TextInput::make('order_index')
+                    ->label('ترتیب')
+                    ->numeric()
+                    ->default(0),
+            ]);
     }
 
     public function table(Table $table): Table
@@ -99,12 +104,12 @@ class AgendaItemsRelationManager extends RelationManager
             ->defaultSort('order_index')
             ->reorderable('order_index')
             ->headerActions([
-                Tables\Actions\CreateAction::make()
+                CreateAction::make()
                     ->label('افزودن دستور'),
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+            ->recordActions([
+                EditAction::make(),
+                DeleteAction::make(),
             ]);
     }
 }
