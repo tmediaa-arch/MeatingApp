@@ -94,10 +94,10 @@ class FileResource extends Resource
                 Tables\Columns\IconColumn::make('icon')
                     ->hiddenLabel()
                     ->state(fn ($r) => match (true) {
-                        str_contains($r->mime_type ?? '', 'pdf') => 'heroicon-o-document',
-                        str_contains($r->mime_type ?? '', 'image') => 'heroicon-o-photo',
-                        str_contains($r->mime_type ?? '', 'video') => 'heroicon-o-film',
-                        default => 'heroicon-o-document-text',
+                        str_contains($r->mime_type ?? '', 'pdf') => Heroicon::OutlinedDocument,
+                        str_contains($r->mime_type ?? '', 'image') => Heroicon::OutlinedPhoto,
+                        str_contains($r->mime_type ?? '', 'video') => Heroicon::OutlinedFilm,
+                        default => Heroicon::OutlinedDocumentText,
                     })
                     ->color('gray'),
                 Tables\Columns\TextColumn::make('title')->label('عنوان')->searchable()->limit(40),
