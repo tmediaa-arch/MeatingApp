@@ -6,18 +6,28 @@ namespace App\Filament\Admin\Resources;
 
 use App\Domains\Organization\Models\Employee;
 use App\Filament\Admin\Resources\EmployeeResource\Pages;
-use Filament\Forms;
-use Filament\Forms\Form;
+use App\Filament\Admin\Schemas\FormLayout;
+use Ariaieboy\Jalali\Forms\Components\JalaliDatePicker;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 class EmployeeResource extends Resource
 {
     protected static ?string $model = Employee::class;
-    protected static ?string $navigationIcon = 'heroicon-o-identification';
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedUserCircle;
     protected static ?string $navigationGroup = 'ساختار سازمانی';
     protected static ?int $navigationSort = 30;
+    protected static ?string $recordTitleAttribute = 'full_name';
 
     public static function getModelLabel(): string
     {
@@ -29,94 +39,100 @@ class EmployeeResource extends Resource
         return 'کارمندان';
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form->schema([
-            Forms\Components\Section::make('اطلاعات هویتی')
-                ->columns(2)
-                ->schema([
-                    Forms\Components\Select::make('organization_id')
-                        ->label('سازمان')
-                        ->relationship('organization', 'name')
-                        ->required(),
+        return $schema->components(FormLayout::withSidebar(
+            main: [
+                Section::make('اطلاعات هویتی')
+                    ->columns(2)
+                    ->schema([
+                        Select::make('organization_id')
+                            ->label('سازمان')
+                            ->relationship('organization', 'name')
+                            ->required(),
 
-                    Forms\Components\TextInput::make('employee_code')
-                        ->label('کد پرسنلی')
-                        ->required()
-                        ->unique(ignoreRecord: true)
-                        ->maxLength(50),
+                        TextInput::make('employee_code')
+                            ->label('کد پرسنلی')
+                            ->required()
+                            ->unique(ignoreRecord: true)
+                            ->maxLength(50),
 
-                    Forms\Components\TextInput::make('national_code')
-                        ->label('کد ملی')
-                        ->length(10)
-                        ->unique(ignoreRecord: true),
+                        TextInput::make('national_code')
+                            ->label('کد ملی')
+                            ->length(10)
+                            ->unique(ignoreRecord: true),
 
-                    Forms\Components\TextInput::make('first_name')->label('نام')->required(),
-                    Forms\Components\TextInput::make('last_name')->label('نام خانوادگی')->required(),
-                    Forms\Components\TextInput::make('father_name')->label('نام پدر'),
+                        TextInput::make('first_name')->label('نام')->required(),
+                        TextInput::make('last_name')->label('نام خانوادگی')->required(),
+                        TextInput::make('father_name')->label('نام پدر'),
 
-                    Forms\Components\Select::make('gender')
-                        ->label('جنسیت')
-                        ->options(['male' => 'مرد', 'female' => 'زن']),
+                        Select::make('gender')
+                            ->label('جنسیت')
+                            ->options(['male' => 'مرد', 'female' => 'زن']),
 
-                    Forms\Components\DatePicker::make('birth_date')->label('تاریخ تولد')->jalali(),
-                ]),
+                        JalaliDatePicker::make('birth_date')->label('تاریخ تولد'),
+                    ]),
 
-            Forms\Components\Section::make('اطلاعات استخدامی')
-                ->columns(2)
-                ->schema([
-                    Forms\Components\Select::make('primary_position_id')
-                        ->label('پست اصلی')
-                        ->relationship('primaryPosition', 'title')
-                        ->searchable()
-                        ->preload(),
+                Section::make('اطلاعات استخدامی')
+                    ->columns(2)
+                    ->schema([
+                        Select::make('primary_position_id')
+                            ->label('پست اصلی')
+                            ->relationship('primaryPosition', 'title')
+                            ->searchable()
+                            ->preload(),
 
-                    Forms\Components\Select::make('current_org_unit_id')
-                        ->label('واحد فعلی')
-                        ->relationship('currentOrgUnit', 'name')
-                        ->searchable()
-                        ->preload(),
+                        Select::make('current_org_unit_id')
+                            ->label('واحد فعلی')
+                            ->relationship('currentOrgUnit', 'name')
+                            ->searchable()
+                            ->preload(),
 
-                    Forms\Components\Select::make('reports_to_employee_id')
-                        ->label('گزارش‌دهی به')
-                        ->relationship('reportsTo', 'first_name')
-                        ->getOptionLabelFromRecordUsing(fn ($r) => $r->full_name)
-                        ->searchable(),
+                        Select::make('reports_to_employee_id')
+                            ->label('گزارش‌دهی به')
+                            ->relationship('reportsTo', 'first_name')
+                            ->getOptionLabelFromRecordUsing(fn ($r) => $r->full_name)
+                            ->searchable(),
 
-                    Forms\Components\Select::make('employment_status')
-                        ->label('وضعیت استخدام')
-                        ->options([
-                            'active' => 'فعال',
-                            'on_leave' => 'مرخصی',
-                            'suspended' => 'تعلیق',
-                            'terminated' => 'پایان همکاری',
-                            'retired' => 'بازنشسته',
-                        ])
-                        ->default('active'),
+                        JalaliDatePicker::make('hire_date')->label('تاریخ استخدام'),
+                        JalaliDatePicker::make('termination_date')->label('تاریخ پایان همکاری'),
+                    ]),
 
-                    Forms\Components\DatePicker::make('hire_date')->label('تاریخ استخدام')->jalali(),
-                    Forms\Components\DatePicker::make('termination_date')->label('تاریخ پایان همکاری')->jalali(),
-                ]),
+                Section::make('اطلاعات تماس')
+                    ->columns(2)
+                    ->collapsed()
+                    ->schema([
+                        TextInput::make('work_email')->label('ایمیل کاری')->email(),
+                        TextInput::make('work_phone')->label('تلفن کاری'),
+                        TextInput::make('mobile')->label('موبایل'),
+                    ]),
+            ],
+            sidebar: [
+                Section::make('وضعیت')
+                    ->schema([
+                        Select::make('employment_status')
+                            ->label('وضعیت استخدام')
+                            ->options([
+                                'active' => 'فعال',
+                                'on_leave' => 'مرخصی',
+                                'suspended' => 'تعلیق',
+                                'terminated' => 'پایان همکاری',
+                                'retired' => 'بازنشسته',
+                            ])
+                            ->default('active'),
 
-            Forms\Components\Section::make('سطح محرمانگی و کاربر')
-                ->columns(2)
-                ->collapsed()
-                ->schema([
-                    Forms\Components\Select::make('clearance_level')
-                        ->label('سطح محرمانگی')
-                        ->options([
-                            'public' => 'عمومی',
-                            'internal' => 'داخلی',
-                            'confidential' => 'محرمانه',
-                            'secret' => 'سری',
-                        ])
-                        ->default('internal'),
-
-                    Forms\Components\TextInput::make('work_email')->label('ایمیل کاری')->email(),
-                    Forms\Components\TextInput::make('work_phone')->label('تلفن کاری'),
-                    Forms\Components\TextInput::make('mobile')->label('موبایل'),
-                ]),
-        ]);
+                        Select::make('clearance_level')
+                            ->label('سطح محرمانگی')
+                            ->options([
+                                'public' => 'عمومی',
+                                'internal' => 'داخلی',
+                                'confidential' => 'محرمانه',
+                                'secret' => 'سری',
+                            ])
+                            ->default('internal'),
+                    ]),
+            ],
+        ));
     }
 
     public static function table(Table $table): Table
@@ -156,7 +172,7 @@ class EmployeeResource extends Resource
                     ->toggleable(),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('employment_status')
+                SelectFilter::make('employment_status')
                     ->label('وضعیت استخدام')
                     ->options([
                         'active' => 'فعال',
@@ -166,15 +182,17 @@ class EmployeeResource extends Resource
                         'retired' => 'بازنشسته',
                     ]),
 
-                Tables\Filters\SelectFilter::make('current_org_unit_id')
+                SelectFilter::make('current_org_unit_id')
                     ->label('واحد')
                     ->relationship('currentOrgUnit', 'name')
                     ->searchable()
                     ->preload(),
             ])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+            ->recordActions([
+                ActionGroup::make([
+                    ViewAction::make(),
+                    EditAction::make(),
+                ]),
             ]);
     }
 

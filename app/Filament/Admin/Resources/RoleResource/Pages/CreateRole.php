@@ -11,7 +11,7 @@ class CreateRole extends CreateRecord
 {
     protected static string $resource = RoleResource::class;
 
-    protected function mutateFormDataBeforeCreate(array $data): array
+    protected function mutateDataBeforeCreate(array $data): array
     {
         $data['guard_name'] = 'web';
         $data['is_system'] = false;

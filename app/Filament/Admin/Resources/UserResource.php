@@ -4,39 +4,39 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources;
 
-use App\Domains\Identity\Actions\AssignRoleAction;
-use App\Domains\Identity\Actions\CreateUserAction;
 use App\Domains\Identity\Actions\SuspendUserAction;
 use App\Domains\Identity\Actions\UnlockUserAction;
-use App\Domains\Identity\DTOs\CreateUserData;
 use App\Domains\Identity\Enums\UserStatus;
 use App\Domains\Identity\Models\User;
 use App\Filament\Admin\Resources\UserResource\Pages;
-use Filament\Forms;
-use Filament\Forms\Form;
+use App\Filament\Admin\Schemas\FormLayout;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
-use Spatie\Permission\Models\Role;
 
-/**
- * Class UserResource
- *
- * Filament Resource برای مدیریت کاربران.
- *
- * نکات مهم:
- * 1. عملیات create توسط CreateUserAction انجام می‌شود — نه مستقیماً
- *    در این Resource. ما در `mutateFormDataBeforeCreate` به Action تحویل می‌دهیم.
- * 2. عملیات suspend, unlock, assign-role هم از طریق Action انجام می‌شوند.
- * 3. این Resource فقط یک «نما» است — منطق کسب‌وکار اینجا نوشته نمی‌شود.
- */
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-users';
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
     protected static ?string $navigationGroup = 'هویت و دسترسی';
     protected static ?int $navigationSort = 10;
+    protected static ?string $recordTitleAttribute = 'username';
 
     public static function getModelLabel(): string
     {
@@ -48,124 +48,123 @@ class UserResource extends Resource
         return 'کاربران';
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form->schema([
-            Forms\Components\Section::make('اطلاعات هویتی')
-                ->columns(2)
-                ->schema([
-                    Forms\Components\TextInput::make('username')
-                        ->label('نام کاربری')
-                        ->required()
-                        ->maxLength(100)
-                        ->unique(ignoreRecord: true)
-                        ->disabled(fn (?User $record) => $record?->is_system),
+        return $schema->components(FormLayout::withSidebar(
+            main: [
+                Section::make('اطلاعات هویتی')
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('username')
+                            ->label('نام کاربری')
+                            ->required()
+                            ->maxLength(100)
+                            ->unique(ignoreRecord: true)
+                            ->disabled(fn (?User $record) => $record?->is_system),
 
-                    Forms\Components\TextInput::make('national_code')
-                        ->label('کد ملی')
-                        ->length(10)
-                        ->unique(ignoreRecord: true)
-                        ->nullable(),
+                        TextInput::make('national_code')
+                            ->label('کد ملی')
+                            ->length(10)
+                            ->unique(ignoreRecord: true)
+                            ->nullable(),
 
-                    Forms\Components\TextInput::make('first_name')
-                        ->label('نام')
-                        ->required()
-                        ->maxLength(100),
+                        TextInput::make('first_name')
+                            ->label('نام')
+                            ->required()
+                            ->maxLength(100),
 
-                    Forms\Components\TextInput::make('last_name')
-                        ->label('نام خانوادگی')
-                        ->required()
-                        ->maxLength(100),
+                        TextInput::make('last_name')
+                            ->label('نام خانوادگی')
+                            ->required()
+                            ->maxLength(100),
 
-                    Forms\Components\TextInput::make('display_name')
-                        ->label('نام نمایشی')
-                        ->maxLength(200),
+                        TextInput::make('display_name')
+                            ->label('نام نمایشی')
+                            ->maxLength(200),
 
-                    Forms\Components\TextInput::make('email')
-                        ->label('ایمیل')
-                        ->email()
-                        ->unique(ignoreRecord: true)
-                        ->maxLength(200),
+                        TextInput::make('email')
+                            ->label('ایمیل')
+                            ->email()
+                            ->unique(ignoreRecord: true)
+                            ->maxLength(200),
 
-                    Forms\Components\TextInput::make('mobile')
-                        ->label('موبایل')
-                        ->tel()
-                        ->maxLength(20),
+                        TextInput::make('mobile')
+                            ->label('موبایل')
+                            ->tel()
+                            ->maxLength(20),
 
-                    Forms\Components\TextInput::make('phone')
-                        ->label('تلفن ثابت')
-                        ->tel()
-                        ->maxLength(20),
-                ]),
+                        TextInput::make('phone')
+                            ->label('تلفن ثابت')
+                            ->tel()
+                            ->maxLength(20),
+                    ]),
 
-            Forms\Components\Section::make('احراز هویت')
-                ->columns(2)
-                ->schema([
-                    Forms\Components\TextInput::make('password')
-                        ->label('رمز عبور')
-                        ->password()
-                        ->revealable()
-                        ->minLength(10)
-                        ->required(fn (string $operation) => $operation === 'create')
-                        ->dehydrated(fn ($state) => filled($state))
-                        ->visible(fn (?User $record) => $record === null || !$record->ldap_guid),
+                Section::make('احراز هویت')
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('password')
+                            ->label('رمز عبور')
+                            ->password()
+                            ->revealable()
+                            ->minLength(10)
+                            ->required(fn (string $operation) => $operation === 'create')
+                            ->dehydrated(fn ($state) => filled($state))
+                            ->visible(fn (?User $record) => $record === null || !$record->ldap_guid),
 
-                    Forms\Components\Toggle::make('mfa_enabled')
-                        ->label('احراز دو مرحله‌ای')
-                        ->default(false),
-                ]),
+                        Toggle::make('mfa_enabled')
+                            ->label('احراز دو مرحله‌ای')
+                            ->default(false),
+                    ]),
 
-            Forms\Components\Section::make('وضعیت و دسترسی')
-                ->columns(2)
-                ->schema([
-                    Forms\Components\Select::make('status')
-                        ->label('وضعیت')
-                        ->options(fn () => collect(UserStatus::cases())
-                            ->mapWithKeys(fn ($s) => [$s->value => $s->label()])
-                            ->toArray())
-                        ->default(UserStatus::Active->value)
-                        ->required(),
+                Section::make('یکپارچه‌سازی')
+                    ->columns(2)
+                    ->collapsed()
+                    ->schema([
+                        TextInput::make('ldap_guid')->label('LDAP GUID'),
+                        TextInput::make('ldap_domain')->label('LDAP Domain'),
+                        TextInput::make('sso_subject')->label('SSO Subject'),
+                        TextInput::make('hrs_employee_code')->label('کد پرسنلی HRS'),
+                    ]),
 
-                    Forms\Components\Toggle::make('is_external')
-                        ->label('کاربر خارجی')
-                        ->helperText('مهمان بیرونی (کارمند داخلی نیست)'),
+                Section::make('تنظیمات کاربری')
+                    ->columns(3)
+                    ->collapsed()
+                    ->schema([
+                        Select::make('preferred_locale')
+                            ->label('زبان')
+                            ->options(['fa' => 'فارسی', 'en' => 'English', 'ar' => 'العربية'])
+                            ->default('fa'),
+                        Select::make('preferred_calendar')
+                            ->label('تقویم')
+                            ->options(['jalali' => 'شمسی', 'gregorian' => 'میلادی'])
+                            ->default('jalali'),
+                        TextInput::make('timezone')
+                            ->label('منطقه زمانی')
+                            ->default('Asia/Tehran'),
+                    ]),
+            ],
+            sidebar: [
+                Section::make('وضعیت و دسترسی')
+                    ->schema([
+                        Select::make('status')
+                            ->label('وضعیت')
+                            ->options(UserStatus::class)
+                            ->default(UserStatus::Active)
+                            ->required(),
 
-                    Forms\Components\Select::make('roles')
-                        ->label('نقش‌ها')
-                        ->relationship('roles', 'display_name')
-                        ->preload()
-                        ->multiple()
-                        ->searchable()
-                        ->columnSpanFull(),
-                ]),
+                        Toggle::make('is_external')
+                            ->label('کاربر خارجی')
+                            ->helperText('مهمان بیرونی (کارمند داخلی نیست)'),
 
-            Forms\Components\Section::make('یکپارچه‌سازی')
-                ->columns(2)
-                ->collapsed()
-                ->schema([
-                    Forms\Components\TextInput::make('ldap_guid')->label('LDAP GUID'),
-                    Forms\Components\TextInput::make('ldap_domain')->label('LDAP Domain'),
-                    Forms\Components\TextInput::make('sso_subject')->label('SSO Subject'),
-                    Forms\Components\TextInput::make('hrs_employee_code')->label('کد پرسنلی HRS'),
-                ]),
-
-            Forms\Components\Section::make('تنظیمات کاربری')
-                ->columns(3)
-                ->collapsed()
-                ->schema([
-                    Forms\Components\Select::make('preferred_locale')
-                        ->label('زبان')
-                        ->options(['fa' => 'فارسی', 'en' => 'English', 'ar' => 'العربية'])
-                        ->default('fa'),
-                    Forms\Components\Select::make('preferred_calendar')
-                        ->label('تقویم')
-                        ->options(['jalali' => 'شمسی', 'gregorian' => 'میلادی'])
-                        ->default('jalali'),
-                    Forms\Components\TextInput::make('timezone')
-                        ->label('منطقه زمانی')
-                        ->default('Asia/Tehran'),
-                ]),
-        ]);
+                        Select::make('roles')
+                            ->label('نقش‌ها')
+                            ->relationship('roles', 'display_name')
+                            ->preload()
+                            ->multiple()
+                            ->searchable(),
+                    ]),
+            ],
+        ));
     }
 
     public static function table(Table $table): Table
@@ -195,10 +194,7 @@ class UserResource extends Resource
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('وضعیت')
-                    ->badge()
-                    ->formatStateUsing(fn (UserStatus $state) => $state->label())
-                    ->color(fn (UserStatus $state) => $state->color())
-                    ->icon(fn (UserStatus $state) => $state->icon()),
+                    ->badge(),
 
                 Tables\Columns\TextColumn::make('roles.display_name')
                     ->label('نقش‌ها')
@@ -228,55 +224,56 @@ class UserResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('status')
+                SelectFilter::make('status')
                     ->label('وضعیت')
-                    ->options(fn () => collect(UserStatus::cases())
-                        ->mapWithKeys(fn ($s) => [$s->value => $s->label()])->toArray()),
+                    ->options(UserStatus::class),
 
-                Tables\Filters\TernaryFilter::make('is_external')
+                TernaryFilter::make('is_external')
                     ->label('خارجی'),
 
-                Tables\Filters\TernaryFilter::make('mfa_enabled')
+                TernaryFilter::make('mfa_enabled')
                     ->label('MFA فعال'),
 
-                Tables\Filters\SelectFilter::make('roles')
+                SelectFilter::make('roles')
                     ->label('نقش')
                     ->relationship('roles', 'display_name')
                     ->multiple()
                     ->preload(),
             ])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+            ->recordActions([
+                ActionGroup::make([
+                    ViewAction::make(),
+                    EditAction::make(),
 
-                Tables\Actions\Action::make('suspend')
-                    ->label('تعلیق')
-                    ->icon('heroicon-o-pause-circle')
-                    ->color('warning')
-                    ->visible(fn (User $record) => !$record->is_system && $record->status === UserStatus::Active)
-                    ->requiresConfirmation()
-                    ->form([
-                        Forms\Components\Textarea::make('reason')
-                            ->label('دلیل تعلیق')
-                            ->required(),
-                    ])
-                    ->action(function (User $record, array $data, SuspendUserAction $action) {
-                        $action->execute($record, $data['reason']);
-                    }),
+                    Action::make('suspend')
+                        ->label('تعلیق')
+                        ->icon(Heroicon::OutlinedXCircle)
+                        ->color('warning')
+                        ->visible(fn (User $record) => !$record->is_system && $record->status === UserStatus::Active)
+                        ->requiresConfirmation()
+                        ->schema([
+                            Textarea::make('reason')
+                                ->label('دلیل تعلیق')
+                                ->required(),
+                        ])
+                        ->action(function (User $record, array $data, SuspendUserAction $action) {
+                            $action->execute($record, $data['reason']);
+                        }),
 
-                Tables\Actions\Action::make('unlock')
-                    ->label('بازکردن')
-                    ->icon('heroicon-o-lock-open')
-                    ->color('success')
-                    ->visible(fn (User $record) => $record->isLocked())
-                    ->requiresConfirmation()
-                    ->action(function (User $record, UnlockUserAction $action) {
-                        $action->execute($record, 'بازکردن دستی توسط ادمین');
-                    }),
+                    Action::make('unlock')
+                        ->label('بازکردن')
+                        ->icon(Heroicon::OutlinedKey)
+                        ->color('success')
+                        ->visible(fn (User $record) => $record->isLocked())
+                        ->requiresConfirmation()
+                        ->action(function (User $record, UnlockUserAction $action) {
+                            $action->execute($record, 'بازکردن دستی توسط ادمین');
+                        }),
+                ]),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->groupedBulkActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ])
             ->defaultSort('created_at', 'desc');
