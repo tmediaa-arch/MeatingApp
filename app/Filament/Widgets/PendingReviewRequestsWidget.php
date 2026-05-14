@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Widgets;
 
 use App\Domains\ServiceRequests\Models\ServiceRequest;
+use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -27,16 +28,16 @@ class PendingReviewRequestsWidget extends BaseWidget
 
         return [
             Stat::make('در صف بررسی', $pending)
-                ->icon('heroicon-o-queue-list')
+                ->icon(Heroicon::OutlinedQueueList)
                 ->color('warning')
                 ->url(route('filament.admin.pages.service-request-review')),
 
             Stat::make('اولویت بالا', $highPriority)
-                ->icon('heroicon-o-fire')
+                ->icon(Heroicon::OutlinedFire)
                 ->color('danger'),
 
             Stat::make('کل overdue', $overdueOpen)
-                ->icon('heroicon-o-exclamation-triangle')
+                ->icon(Heroicon::OutlinedExclamationTriangle)
                 ->color('danger'),
         ];
     }

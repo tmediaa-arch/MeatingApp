@@ -6,6 +6,7 @@ namespace App\Filament\Admin\Widgets;
 
 use App\Domains\Calendar\Services\JalaliCalendarService;
 use App\Domains\Meetings\Models\Meeting;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -46,6 +47,6 @@ class UpcomingMeetingsWidget extends BaseWidget
             ])
             ->paginated(false)
             ->emptyStateHeading('جلسه‌ای در آینده ندارید')
-            ->emptyStateIcon('heroicon-o-calendar');
+            ->emptyStateIcon(Heroicon::OutlinedCalendar);
     }
 }
