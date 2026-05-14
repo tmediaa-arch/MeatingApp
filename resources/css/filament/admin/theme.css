@@ -1,0 +1,36 @@
+@import 'tailwindcss';
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+@import 'vazirmatn/Vazirmatn-font-face.css';
+
+@source '../../../../app/Filament';
+@source '../../../../resources/views/filament';
+@source '../../../../vendor/filament';
+
+@theme {
+    --font-sans: 'Vazirmatn', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: 'Vazirmatn', ui-monospace, monospace;
+}
+
+html,
+body,
+.fi-body,
+.fi-layout,
+.fi-sidebar,
+.fi-topbar,
+.fi-main,
+.fi-modal,
+.fi-dropdown-panel,
+.fi-input,
+.fi-select-input,
+.fi-textarea,
+.fi-btn,
+.fi-ta-text,
+.fi-section-header-heading,
+.fi-form-component-label {
+    font-family: 'Vazirmatn', ui-sans-serif, system-ui, sans-serif;
+}
+
+.fi-ta-cell [data-numeric],
+.fi-input[type='number'] {
+    font-variant-numeric: tabular-nums;
+}
