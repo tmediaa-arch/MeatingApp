@@ -5,34 +5,30 @@ declare(strict_types=1);
 namespace App\Filament\Pages;
 
 use App\Domains\Notifications\Models\NotificationOutbox;
-use Filament\Actions;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkAction;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
-/**
- * صفحه کارتابل کاربر — تجمیع همه اعلان‌های in_app.
- *
- * این صفحه از NotificationOutbox فقط رکوردهای channel=in_app
- * را برای کاربر فعلی نشان می‌دهد، و امکان دیدن، علامت خوانده شدن،
- * و بایگانی را فراهم می‌کند.
- */
 class InboxPage extends Page implements HasForms, HasTable
 {
     use InteractsWithForms, InteractsWithTable;
 
-    protected static ?string $navigationIcon = 'heroicon-o-inbox';
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedInbox;
     protected static ?string $navigationLabel = 'کارتابل';
     protected static ?string $title = 'کارتابل من';
     protected static ?int $navigationSort = 1;
 
-    protected static string $view = 'filament.pages.inbox';
+    protected string $view = 'filament.pages.inbox';
 
     public ?string $activeTab = 'unread';
 
@@ -50,8 +46,8 @@ class InboxPage extends Page implements HasForms, HasTable
                     ->label('')
                     ->width('10px')
                     ->state(fn ($r) => match ($r->priority) {
-                        'critical', 'high' => 'heroicon-s-exclamation-circle',
-                        default => 'heroicon-o-bell',
+                        'critical', 'high' => Heroicon::MiniExclamationCircle,
+                        default => Heroicon::OutlinedBell,
                     })
                     ->color(fn ($r) => match ($r->priority) {
                         'critical' => 'danger',
@@ -85,42 +81,43 @@ class InboxPage extends Page implements HasForms, HasTable
                     })
                     ->badge(),
             ])
-            ->actions([
-                Tables\Actions\Action::make('view')
-                    ->label('مشاهده')
-                    ->icon('heroicon-o-eye')
-                    ->action(function (NotificationOutbox $record) {
-                        $record->markAsRead();
+            ->recordActions([
+                ActionGroup::make([
+                    Action::make('view')
+                        ->label('مشاهده')
+                        ->icon(Heroicon::OutlinedEye)
+                        ->action(function (NotificationOutbox $record) {
+                            $record->markAsRead();
 
-                        // redirect به resource مرتبط
-                        if ($record->notifiable) {
-                            return redirect($this->getNotifiableUrl($record));
-                        }
-                    }),
+                            if ($record->notifiable) {
+                                return redirect($this->getNotifiableUrl($record));
+                            }
+                        }),
 
-                Tables\Actions\Action::make('markAsRead')
-                    ->label('خوانده شده')
-                    ->icon('heroicon-o-check')
-                    ->visible(fn (NotificationOutbox $record) => !$record->read_in_inbox)
-                    ->action(fn (NotificationOutbox $record) => $record->markAsRead()),
+                    Action::make('markAsRead')
+                        ->label('خوانده شده')
+                        ->icon(Heroicon::OutlinedCheck)
+                        ->visible(fn (NotificationOutbox $record) => !$record->read_in_inbox)
+                        ->action(fn (NotificationOutbox $record) => $record->markAsRead()),
 
-                Tables\Actions\Action::make('archive')
-                    ->label('بایگانی')
-                    ->icon('heroicon-o-archive-box')
-                    ->color('gray')
-                    ->action(fn (NotificationOutbox $record) => $record->archive()),
+                    Action::make('archive')
+                        ->label('بایگانی')
+                        ->icon(Heroicon::OutlinedArchiveBox)
+                        ->color('gray')
+                        ->action(fn (NotificationOutbox $record) => $record->archive()),
+                ]),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkAction::make('markAllRead')
+            ->groupedBulkActions([
+                BulkAction::make('markAllRead')
                     ->label('علامت‌گذاری به‌عنوان خوانده')
-                    ->icon('heroicon-o-check-circle')
+                    ->icon(Heroicon::OutlinedCheckCircle)
                     ->action(function ($records) {
                         $records->each(fn ($r) => $r->markAsRead());
                         Notification::make()->success()->title('انجام شد')->send();
                     }),
-                Tables\Actions\BulkAction::make('archiveAll')
+                BulkAction::make('archiveAll')
                     ->label('بایگانی همه')
-                    ->icon('heroicon-o-archive-box')
+                    ->icon(Heroicon::OutlinedArchiveBox)
                     ->action(function ($records) {
                         $records->each(fn ($r) => $r->archive());
                         Notification::make()->success()->title('بایگانی شدند')->send();
@@ -140,7 +137,7 @@ class InboxPage extends Page implements HasForms, HasTable
             'archived' => NotificationOutbox::query()
                 ->where('recipient_user_id', $user->id)
                 ->where('archived_in_inbox', true),
-            default => $query, // 'all'
+            default => $query,
         };
     }
 

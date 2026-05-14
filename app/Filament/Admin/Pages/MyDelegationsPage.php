@@ -8,23 +8,14 @@ use App\Domains\Identity\Models\UserDelegation;
 use App\Domains\Identity\Services\DelegationContextService;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Support\Icons\Heroicon;
 
-/**
- * صفحه مدیریت تفویض‌های شخصی کاربر.
- *
- * این صفحه دو بخش دارد:
- * 1. تفویض‌هایی که من به دیگران داده‌ام
- * 2. تفویض‌هایی که از دیگران دریافت کرده‌ام (می‌توانم به نمایندگی اقدام کنم)
- *
- * در بخش دوم، دکمه «اقدام به نمایندگی از» وجود دارد که
- * delegation context را در session فعال می‌کند.
- */
 class MyDelegationsPage extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-user-group';
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;
     protected static ?string $navigationGroup = 'هویت و دسترسی';
     protected static ?int $navigationSort = 19;
-    protected static string $view = 'filament.admin.pages.my-delegations';
+    protected string $view = 'filament.admin.pages.my-delegations';
 
     public function getTitle(): string
     {

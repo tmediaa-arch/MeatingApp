@@ -9,14 +9,15 @@ use App\Domains\Workflow\Models\ProcessIncident;
 use App\Domains\Workflow\Models\ProcessInstance;
 use App\Domains\Workflow\Models\UserTask;
 use Filament\Pages\Page;
+use Filament\Support\Icons\Heroicon;
 
 class WorkflowMonitorPage extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-presentation-chart-line';
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedPresentationChartLine;
     protected static ?string $navigationGroup = 'گردش کار';
     protected static ?int $navigationSort = 100;
 
-    protected static string $view = 'filament.pages.workflow-monitor';
+    protected string $view = 'filament.pages.workflow-monitor';
 
     public static function getNavigationLabel(): string
     {

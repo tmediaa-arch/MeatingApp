@@ -9,8 +9,11 @@ use App\Domains\VideoConference\Enums\HealthStatus;
 use App\Domains\VideoConference\Enums\VideoConferenceRoomStatus;
 use App\Domains\VideoConference\Models\VideoConferenceProvider;
 use App\Domains\VideoConference\Models\VideoConferenceRoom;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
@@ -20,8 +23,8 @@ class VideoConferenceMonitorPage extends Page implements HasTable
 {
     use InteractsWithTable;
 
-    protected static ?string $navigationIcon = 'heroicon-o-signal';
-    protected static string $view = 'filament.pages.vc-monitor';
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedSignal;
+    protected string $view = 'filament.pages.vc-monitor';
     protected static ?string $navigationGroup = 'ویدئوکنفرانس';
     protected static ?int $navigationSort = 1;
 
@@ -59,9 +62,7 @@ class VideoConferenceMonitorPage extends Page implements HasTable
                     ->badge(),
                 Tables\Columns\TextColumn::make('status')
                     ->label('وضعیت')
-                    ->badge()
-                    ->color(fn (VideoConferenceRoomStatus $s) => $s->color())
-                    ->formatStateUsing(fn (VideoConferenceRoomStatus $s) => $s->label()),
+                    ->badge(),
                 Tables\Columns\TextColumn::make('meeting.subject')->label('جلسه')->placeholder('—'),
                 Tables\Columns\TextColumn::make('attendances_count')
                     ->label('شرکت‌کنندگان')
@@ -74,27 +75,29 @@ class VideoConferenceMonitorPage extends Page implements HasTable
                     ->dateTime('Y/m/d H:i')
                     ->placeholder('—'),
             ])
-            ->actions([
-                Tables\Actions\Action::make('sync')
-                    ->label('Sync وضعیت')
-                    ->icon('heroicon-o-arrow-path')
-                    ->color('info')
-                    ->action(function (VideoConferenceRoom $room) {
-                        app(\App\Domains\VideoConference\Services\VideoConferenceService::class)
-                            ->syncStatus($room);
-                        Notification::make()->title('وضعیت به‌روز شد')->success()->send();
-                    }),
-                Tables\Actions\Action::make('end')
-                    ->label('پایان دادن')
-                    ->icon('heroicon-o-stop-circle')
-                    ->color('danger')
-                    ->requiresConfirmation()
-                    ->visible(fn (VideoConferenceRoom $r) => $r->status === VideoConferenceRoomStatus::InProgress)
-                    ->action(function (VideoConferenceRoom $room) {
-                        app(\App\Domains\VideoConference\Services\VideoConferenceService::class)
-                            ->endRoom($room);
-                        Notification::make()->title('اتاق پایان یافت')->warning()->send();
-                    }),
+            ->recordActions([
+                ActionGroup::make([
+                    Action::make('sync')
+                        ->label('Sync وضعیت')
+                        ->icon(Heroicon::OutlinedArrowPath)
+                        ->color('info')
+                        ->action(function (VideoConferenceRoom $room) {
+                            app(\App\Domains\VideoConference\Services\VideoConferenceService::class)
+                                ->syncStatus($room);
+                            Notification::make()->title('وضعیت به‌روز شد')->success()->send();
+                        }),
+                    Action::make('end')
+                        ->label('پایان دادن')
+                        ->icon(Heroicon::OutlinedStopCircle)
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->visible(fn (VideoConferenceRoom $r) => $r->status === VideoConferenceRoomStatus::InProgress)
+                        ->action(function (VideoConferenceRoom $room) {
+                            app(\App\Domains\VideoConference\Services\VideoConferenceService::class)
+                                ->endRoom($room);
+                            Notification::make()->title('اتاق پایان یافت')->warning()->send();
+                        }),
+                ]),
             ]);
     }
 
@@ -119,7 +122,7 @@ class VideoConferenceMonitorPage extends Page implements HasTable
         return [
             \Filament\Actions\Action::make('refresh_all_health')
                 ->label('بررسی سلامت همه Providerها')
-                ->icon('heroicon-o-heart')
+                ->icon(Heroicon::OutlinedHeart)
                 ->color('info')
                 ->action(function () {
                     $count = 0;
