@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\ServiceRequestResource\RelationManagers;
 
-use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Actions\AttachAction;
+use Filament\Actions\DetachAction;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 
@@ -16,16 +20,16 @@ class AttachmentsRelationManager extends RelationManager
 
     protected static ?string $title = 'پیوست‌ها';
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form->schema([
-            Forms\Components\Select::make('file_id')
+        return $schema->components([
+            Select::make('file_id')
                 ->label('فایل')
                 ->relationship('attachments', 'original_name')
                 ->searchable()
                 ->required(),
 
-            Forms\Components\Select::make('purpose')
+            Select::make('purpose')
                 ->label('کاربرد')
                 ->options([
                     'quote' => 'پیش‌فاکتور',
@@ -35,7 +39,7 @@ class AttachmentsRelationManager extends RelationManager
                     'other' => 'سایر',
                 ]),
 
-            Forms\Components\Textarea::make('description')
+            Textarea::make('description')
                 ->label('توضیح')
                 ->rows(2),
         ]);
@@ -63,11 +67,11 @@ class AttachmentsRelationManager extends RelationManager
                     ->dateTime('Y/m/d H:i'),
             ])
             ->headerActions([
-                Tables\Actions\AttachAction::make()
+                AttachAction::make()
                     ->preloadRecordSelect()
-                    ->form(fn ($action) => [
+                    ->schema(fn ($action) => [
                         $action->getRecordSelect(),
-                        Forms\Components\Select::make('purpose')
+                        Select::make('purpose')
                             ->label('کاربرد')
                             ->options([
                                 'quote' => 'پیش‌فاکتور',
@@ -76,12 +80,12 @@ class AttachmentsRelationManager extends RelationManager
                                 'reference' => 'مرجع',
                                 'other' => 'سایر',
                             ]),
-                        Forms\Components\Textarea::make('description')->label('توضیح')->rows(2),
-                        Forms\Components\Hidden::make('uploaded_by_user_id')->default(auth()->id()),
+                        Textarea::make('description')->label('توضیح')->rows(2),
+                        Hidden::make('uploaded_by_user_id')->default(auth()->id()),
                     ]),
             ])
-            ->actions([
-                Tables\Actions\DetachAction::make(),
+            ->recordActions([
+                DetachAction::make(),
             ]);
     }
 }

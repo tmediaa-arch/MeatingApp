@@ -9,16 +9,16 @@ use App\Domains\Reports\Enums\ReportFormat;
 use App\Domains\Reports\Models\Report;
 use App\Filament\Resources\ReportResource;
 use App\Filament\Resources\ReportRunResource;
+use Filament\Actions\Action;
 use Filament\Forms;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 
-/**
- * صفحه اجرای گزارش — فرم پارامترها به صورت پویا بر اساس input_schema ساخته می‌شود.
- */
 class RunReport extends Page implements HasForms
 {
     use InteractsWithForms;
@@ -43,33 +43,33 @@ class RunReport extends Page implements HasForms
         ]);
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
-            ->schema($this->buildDynamicFields())
+        return $schema
+            ->components($this->buildDynamicFields())
             ->statePath('data');
     }
 
     private function buildDynamicFields(): array
     {
-        $fields = [
-            Forms\Components\Section::make($this->record->display_name)
+        return [
+            Section::make($this->record->display_name)
                 ->description($this->record->description)
                 ->schema($this->buildSchemaFields()),
 
-            Forms\Components\Section::make('تنظیمات خروجی')->schema([
-                Forms\Components\Select::make('format')
-                    ->label('فرمت خروجی')
-                    ->options(collect($this->record->supported_formats ?? ['pdf'])
-                        ->mapWithKeys(fn ($f) => [$f => strtoupper($f)]))
-                    ->required()
-                    ->default('pdf'),
-                Forms\Components\Toggle::make('force_fresh')
-                    ->label('اجبار به اجرای تازه (نادیده گرفتن Cache)'),
-            ])->columns(2),
+            Section::make('تنظیمات خروجی')
+                ->columns(2)
+                ->schema([
+                    Forms\Components\Select::make('format')
+                        ->label('فرمت خروجی')
+                        ->options(collect($this->record->supported_formats ?? ['pdf'])
+                            ->mapWithKeys(fn ($f) => [$f => strtoupper($f)]))
+                        ->required()
+                        ->default('pdf'),
+                    Forms\Components\Toggle::make('force_fresh')
+                        ->label('اجبار به اجرای تازه (نادیده گرفتن Cache)'),
+                ]),
         ];
-
-        return $fields;
     }
 
     private function buildSchemaFields(): array
@@ -99,8 +99,12 @@ class RunReport extends Page implements HasForms
             };
 
             $component->label($label);
-            if ($required) $component->required();
-            if ($default !== null) $component->default($default);
+            if ($required) {
+                $component->required();
+            }
+            if ($default !== null) {
+                $component->default($default);
+            }
 
             $components[] = $component;
         }
@@ -117,7 +121,6 @@ class RunReport extends Page implements HasForms
             $format = ReportFormat::from($data['format'] ?? 'pdf');
             $forceFresh = (bool) ($data['force_fresh'] ?? false);
 
-            // فیلدهای dynamic را به filters ببریم
             unset($data['format'], $data['force_fresh']);
 
             $params = [
@@ -148,9 +151,9 @@ class RunReport extends Page implements HasForms
     protected function getFormActions(): array
     {
         return [
-            \Filament\Actions\Action::make('run')
+            Action::make('run')
                 ->label('اجرای گزارش')
-                ->icon('heroicon-o-play')
+                ->icon(Heroicon::OutlinedPlay)
                 ->action('execute')
                 ->color('primary'),
         ];
