@@ -32,7 +32,7 @@ class ReportResource extends Resource
     protected static ?string $model = Report::class;
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentChartBar;
-    protected static ?string $navigationGroup = 'گزارش‌ها';
+    protected static string|\UnitEnum|null $navigationGroup = 'گزارش‌ها';
     protected static ?int $navigationSort = 1;
     protected static ?string $recordTitleAttribute = 'display_name';
 

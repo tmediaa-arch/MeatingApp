@@ -12,7 +12,7 @@ use Filament\Support\Icons\Heroicon;
 class OrgChartPage extends Page
 {
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedShare;
-    protected static ?string $navigationGroup = 'ساختار سازمانی';
+    protected static string|\UnitEnum|null $navigationGroup = 'ساختار سازمانی';
     protected static ?int $navigationSort = 25;
     protected string $view = 'filament.admin.pages.org-chart';
 

@@ -35,7 +35,7 @@ class TaskResource extends Resource
     protected static ?string $model = Task::class;
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentList;
-    protected static ?string $navigationGroup = 'مدیریت پس از جلسه';
+    protected static string|\UnitEnum|null $navigationGroup = 'مدیریت پس از جلسه';
     protected static ?string $navigationLabel = 'وظایف';
     protected static ?string $modelLabel = 'وظیفه';
     protected static ?string $pluralModelLabel = 'وظایف';

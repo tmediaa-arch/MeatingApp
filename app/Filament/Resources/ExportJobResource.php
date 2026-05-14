@@ -23,7 +23,7 @@ class ExportJobResource extends Resource
     protected static ?string $model = ExportJob::class;
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedArrowDownTray;
-    protected static ?string $navigationGroup = 'گزارش‌ها';
+    protected static string|\UnitEnum|null $navigationGroup = 'گزارش‌ها';
     protected static ?int $navigationSort = 3;
     protected static ?string $recordTitleAttribute = 'label';
 

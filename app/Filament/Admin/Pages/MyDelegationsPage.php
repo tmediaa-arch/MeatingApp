@@ -13,7 +13,7 @@ use Filament\Support\Icons\Heroicon;
 class MyDelegationsPage extends Page
 {
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;
-    protected static ?string $navigationGroup = 'هویت و دسترسی';
+    protected static string|\UnitEnum|null $navigationGroup = 'هویت و دسترسی';
     protected static ?int $navigationSort = 19;
     protected string $view = 'filament.admin.pages.my-delegations';
 

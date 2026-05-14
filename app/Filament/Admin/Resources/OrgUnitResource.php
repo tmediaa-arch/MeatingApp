@@ -31,7 +31,7 @@ class OrgUnitResource extends Resource
 {
     protected static ?string $model = OrgUnit::class;
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingOffice2;
-    protected static ?string $navigationGroup = 'ساختار سازمانی';
+    protected static string|\UnitEnum|null $navigationGroup = 'ساختار سازمانی';
     protected static ?int $navigationSort = 20;
     protected static ?string $recordTitleAttribute = 'name';
 

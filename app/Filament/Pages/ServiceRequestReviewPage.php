@@ -26,7 +26,7 @@ class ServiceRequestReviewPage extends Page implements HasTable
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedMagnifyingGlassCircle;
     protected string $view = 'filament.pages.service-request-review';
-    protected static ?string $navigationGroup = 'درخواست‌های جانبی';
+    protected static string|\UnitEnum|null $navigationGroup = 'درخواست‌های جانبی';
     protected static ?int $navigationSort = 5;
 
     public static function getNavigationLabel(): string

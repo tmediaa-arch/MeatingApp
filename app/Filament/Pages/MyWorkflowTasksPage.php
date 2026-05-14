@@ -25,7 +25,7 @@ class MyWorkflowTasksPage extends Page implements HasTable
     use InteractsWithTable;
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedQueueList;
-    protected static ?string $navigationGroup = 'گردش کار';
+    protected static string|\UnitEnum|null $navigationGroup = 'گردش کار';
     protected static ?int $navigationSort = 5;
 
     protected string $view = 'filament.pages.my-workflow-tasks';

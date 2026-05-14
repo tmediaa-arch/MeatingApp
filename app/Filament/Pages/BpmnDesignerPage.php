@@ -22,7 +22,7 @@ class BpmnDesignerPage extends Page implements HasForms
     use InteractsWithForms;
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedSquare3Stack3d;
-    protected static ?string $navigationGroup = 'گردش کار';
+    protected static string|\UnitEnum|null $navigationGroup = 'گردش کار';
     protected static ?int $navigationSort = 1;
 
     protected string $view = 'filament.pages.bpmn-designer';

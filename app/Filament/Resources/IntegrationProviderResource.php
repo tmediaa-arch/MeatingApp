@@ -33,7 +33,7 @@ class IntegrationProviderResource extends Resource
     protected static ?string $model = IntegrationProvider::class;
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedArrowPathRoundedSquare;
-    protected static ?string $navigationGroup = 'یکپارچه‌سازی';
+    protected static string|\UnitEnum|null $navigationGroup = 'یکپارچه‌سازی';
     protected static ?int $navigationSort = 1;
     protected static ?string $recordTitleAttribute = 'display_name';
 

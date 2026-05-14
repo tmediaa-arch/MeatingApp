@@ -34,7 +34,7 @@ class UserResource extends Resource
     protected static ?string $model = User::class;
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
-    protected static ?string $navigationGroup = 'هویت و دسترسی';
+    protected static string|\UnitEnum|null $navigationGroup = 'هویت و دسترسی';
     protected static ?int $navigationSort = 10;
     protected static ?string $recordTitleAttribute = 'username';
 

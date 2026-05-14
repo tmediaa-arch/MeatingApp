@@ -34,7 +34,7 @@ class RoomResource extends Resource
     protected static ?string $navigationLabel = 'سالن‌ها';
     protected static ?string $modelLabel = 'سالن';
     protected static ?string $pluralModelLabel = 'سالن‌ها';
-    protected static ?string $navigationGroup = 'مدیریت جلسات';
+    protected static string|\UnitEnum|null $navigationGroup = 'مدیریت جلسات';
     protected static ?int $navigationSort = 5;
     protected static ?string $recordTitleAttribute = 'name';
 

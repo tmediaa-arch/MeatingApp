@@ -32,7 +32,7 @@ class VideoConferenceProviderResource extends Resource
     protected static ?string $model = VideoConferenceProvider::class;
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedVideoCamera;
-    protected static ?string $navigationGroup = 'ویدئوکنفرانس';
+    protected static string|\UnitEnum|null $navigationGroup = 'ویدئوکنفرانس';
     protected static ?int $navigationSort = 5;
     protected static ?string $recordTitleAttribute = 'name';
 

@@ -35,7 +35,7 @@ class MinuteResource extends Resource
     protected static ?string $model = Minute::class;
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;
-    protected static ?string $navigationGroup = 'مدیریت پس از جلسه';
+    protected static string|\UnitEnum|null $navigationGroup = 'مدیریت پس از جلسه';
     protected static ?string $navigationLabel = 'صورت‌جلسات';
     protected static ?string $modelLabel = 'صورتجلسه';
     protected static ?string $pluralModelLabel = 'صورت‌جلسات';

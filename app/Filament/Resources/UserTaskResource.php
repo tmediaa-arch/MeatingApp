@@ -29,7 +29,7 @@ class UserTaskResource extends Resource
     protected static ?string $model = UserTask::class;
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentCheck;
-    protected static ?string $navigationGroup = 'گردش کار';
+    protected static string|\UnitEnum|null $navigationGroup = 'گردش کار';
     protected static ?string $recordTitleAttribute = 'name';
     protected static ?int $navigationSort = 30;
 

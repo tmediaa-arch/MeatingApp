@@ -14,7 +14,7 @@ class DashboardViewPage extends Page
 {
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedChartPie;
     protected static ?string $navigationLabel = 'داشبوردها';
-    protected static ?string $navigationGroup = 'داشبوردها';
+    protected static string|\UnitEnum|null $navigationGroup = 'داشبوردها';
     protected static ?int $navigationSort = 1;
 
     protected string $view = 'filament.pages.dashboard-view';

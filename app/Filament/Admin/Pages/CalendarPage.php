@@ -15,7 +15,7 @@ class CalendarPage extends Page
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedCalendar;
     protected static ?string $navigationLabel = 'تقویم جلسات';
     protected static ?string $title = 'تقویم جلسات';
-    protected static ?string $navigationGroup = 'مدیریت جلسات';
+    protected static string|\UnitEnum|null $navigationGroup = 'مدیریت جلسات';
     protected static ?int $navigationSort = 2;
     protected string $view = 'filament.admin.pages.calendar';
 

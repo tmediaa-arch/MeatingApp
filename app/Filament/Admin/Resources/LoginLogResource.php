@@ -18,7 +18,7 @@ class LoginLogResource extends Resource
 {
     protected static ?string $model = LoginLog::class;
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedArrowLeftEndOnRectangle;
-    protected static ?string $navigationGroup = 'ممیزی و امنیت';
+    protected static string|\UnitEnum|null $navigationGroup = 'ممیزی و امنیت';
     protected static ?int $navigationSort = 82;
     protected static ?string $recordTitleAttribute = 'username_attempted';
 

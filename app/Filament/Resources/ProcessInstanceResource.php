@@ -28,7 +28,7 @@ class ProcessInstanceResource extends Resource
     protected static ?string $model = ProcessInstance::class;
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedPlayCircle;
-    protected static ?string $navigationGroup = 'گردش کار';
+    protected static string|\UnitEnum|null $navigationGroup = 'گردش کار';
     protected static ?int $navigationSort = 20;
     protected static ?string $recordTitleAttribute = 'instance_uuid';
 

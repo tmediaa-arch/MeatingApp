@@ -25,7 +25,7 @@ class VideoConferenceMonitorPage extends Page implements HasTable
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedSignal;
     protected string $view = 'filament.pages.vc-monitor';
-    protected static ?string $navigationGroup = 'ویدئوکنفرانس';
+    protected static string|\UnitEnum|null $navigationGroup = 'ویدئوکنفرانس';
     protected static ?int $navigationSort = 1;
 
     public static function getNavigationLabel(): string

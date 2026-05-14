@@ -24,7 +24,7 @@ class AuditLogResource extends Resource
 {
     protected static ?string $model = AuditLog::class;
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentList;
-    protected static ?string $navigationGroup = 'ممیزی و امنیت';
+    protected static string|\UnitEnum|null $navigationGroup = 'ممیزی و امنیت';
     protected static ?int $navigationSort = 80;
     protected static ?string $recordTitleAttribute = 'event';
 

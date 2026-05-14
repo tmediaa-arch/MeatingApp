@@ -14,7 +14,7 @@ use Filament\Support\Icons\Heroicon;
 class WorkflowMonitorPage extends Page
 {
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedPresentationChartLine;
-    protected static ?string $navigationGroup = 'گردش کار';
+    protected static string|\UnitEnum|null $navigationGroup = 'گردش کار';
     protected static ?int $navigationSort = 100;
 
     protected string $view = 'filament.pages.workflow-monitor';

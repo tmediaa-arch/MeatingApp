@@ -30,7 +30,7 @@ class ProcessDefinitionResource extends Resource
     protected static ?string $model = ProcessDefinition::class;
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedCubeTransparent;
-    protected static ?string $navigationGroup = 'گردش کار';
+    protected static string|\UnitEnum|null $navigationGroup = 'گردش کار';
     protected static ?int $navigationSort = 10;
     protected static ?string $recordTitleAttribute = 'name';
 

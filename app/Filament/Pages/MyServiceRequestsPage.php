@@ -23,7 +23,7 @@ class MyServiceRequestsPage extends Page implements HasTable
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentCheck;
     protected string $view = 'filament.pages.my-service-requests';
-    protected static ?string $navigationGroup = 'درخواست‌های جانبی';
+    protected static string|\UnitEnum|null $navigationGroup = 'درخواست‌های جانبی';
     protected static ?int $navigationSort = 1;
 
     public static function getNavigationLabel(): string

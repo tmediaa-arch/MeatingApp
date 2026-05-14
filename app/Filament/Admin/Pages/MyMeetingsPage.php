@@ -24,7 +24,7 @@ class MyMeetingsPage extends Page implements HasTable
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedUserCircle;
     protected static ?string $navigationLabel = 'جلسات من';
     protected static ?string $title = 'جلسات من';
-    protected static ?string $navigationGroup = 'مدیریت جلسات';
+    protected static string|\UnitEnum|null $navigationGroup = 'مدیریت جلسات';
     protected static ?int $navigationSort = 3;
     protected string $view = 'filament.admin.pages.my-meetings';
 

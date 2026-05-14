@@ -46,7 +46,7 @@ class MeetingResource extends Resource
     protected static ?string $navigationLabel = 'جلسات';
     protected static ?string $modelLabel = 'جلسه';
     protected static ?string $pluralModelLabel = 'جلسات';
-    protected static ?string $navigationGroup = 'مدیریت جلسات';
+    protected static string|\UnitEnum|null $navigationGroup = 'مدیریت جلسات';
     protected static ?string $recordTitleAttribute = 'subject';
     protected static ?int $navigationSort = 1;
 

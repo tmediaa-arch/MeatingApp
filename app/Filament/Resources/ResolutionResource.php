@@ -35,7 +35,7 @@ class ResolutionResource extends Resource
     protected static ?string $model = Resolution::class;
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentCheck;
-    protected static ?string $navigationGroup = 'مدیریت پس از جلسه';
+    protected static string|\UnitEnum|null $navigationGroup = 'مدیریت پس از جلسه';
     protected static ?string $navigationLabel = 'مصوبات';
     protected static ?string $modelLabel = 'مصوبه';
     protected static ?string $pluralModelLabel = 'مصوبات';

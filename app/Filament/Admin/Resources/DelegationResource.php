@@ -29,7 +29,7 @@ class DelegationResource extends Resource
 {
     protected static ?string $model = UserDelegation::class;
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedPaperAirplane;
-    protected static ?string $navigationGroup = 'هویت و دسترسی';
+    protected static string|\UnitEnum|null $navigationGroup = 'هویت و دسترسی';
     protected static ?int $navigationSort = 18;
     protected static ?string $recordTitleAttribute = 'id';
 

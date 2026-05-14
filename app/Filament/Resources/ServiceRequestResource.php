@@ -37,7 +37,7 @@ class ServiceRequestResource extends Resource
     protected static ?string $model = ServiceRequest::class;
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentList;
-    protected static ?string $navigationGroup = 'درخواست‌های جانبی';
+    protected static string|\UnitEnum|null $navigationGroup = 'درخواست‌های جانبی';
     protected static ?int $navigationSort = 10;
     protected static ?string $recordTitleAttribute = 'title';
 

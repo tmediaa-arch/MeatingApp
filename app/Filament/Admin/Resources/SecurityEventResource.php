@@ -21,7 +21,7 @@ class SecurityEventResource extends Resource
 {
     protected static ?string $model = SecurityEvent::class;
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedShieldExclamation;
-    protected static ?string $navigationGroup = 'ممیزی و امنیت';
+    protected static string|\UnitEnum|null $navigationGroup = 'ممیزی و امنیت';
     protected static ?int $navigationSort = 85;
     protected static ?string $recordTitleAttribute = 'event';
 

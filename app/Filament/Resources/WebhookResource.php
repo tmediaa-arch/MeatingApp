@@ -28,7 +28,7 @@ class WebhookResource extends Resource
     protected static ?string $model = ApiWebhook::class;
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedArrowUpTray;
-    protected static ?string $navigationGroup = 'یکپارچه‌سازی';
+    protected static string|\UnitEnum|null $navigationGroup = 'یکپارچه‌سازی';
     protected static ?int $navigationSort = 2;
     protected static ?string $recordTitleAttribute = 'name';
 

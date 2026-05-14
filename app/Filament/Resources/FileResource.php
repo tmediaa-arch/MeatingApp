@@ -34,7 +34,7 @@ class FileResource extends Resource
     protected static ?string $model = File::class;
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedFolder;
-    protected static ?string $navigationGroup = 'مدیریت پس از جلسه';
+    protected static string|\UnitEnum|null $navigationGroup = 'مدیریت پس از جلسه';
     protected static ?string $navigationLabel = 'فایل‌ها';
     protected static ?string $modelLabel = 'فایل';
     protected static ?string $pluralModelLabel = 'فایل‌ها';
