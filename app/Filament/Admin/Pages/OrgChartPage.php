@@ -7,18 +7,14 @@ namespace App\Filament\Admin\Pages;
 use App\Domains\Organization\Models\OrgUnit;
 use App\Domains\Organization\Models\Organization;
 use Filament\Pages\Page;
+use Filament\Support\Icons\Heroicon;
 
-/**
- * صفحه نمایش گرافیکی درخت سازمانی.
- * در فاز اول از view drill-down ساده استفاده می‌کنیم؛
- * در فازهای بعد، می‌توان از treant.js یا d3.js برای نمایش گرافیکی استفاده کرد.
- */
 class OrgChartPage extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-share';
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedShare;
     protected static ?string $navigationGroup = 'ساختار سازمانی';
     protected static ?int $navigationSort = 25;
-    protected static string $view = 'filament.admin.pages.org-chart';
+    protected string $view = 'filament.admin.pages.org-chart';
 
     public ?int $selectedOrganization = null;
 
@@ -39,7 +35,7 @@ class OrgChartPage extends Page
 
     public function getTreeData(): array
     {
-        if (!$this->selectedOrganization) {
+        if (! $this->selectedOrganization) {
             return [];
         }
 
@@ -51,7 +47,6 @@ class OrgChartPage extends Page
             ->orderBy('name')
             ->get();
 
-        // ساخت ساختار درختی از flat list
         $byParent = $units->groupBy('parent_id');
         $roots = $byParent->get(null, collect());
 

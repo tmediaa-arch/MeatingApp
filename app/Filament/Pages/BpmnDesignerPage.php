@@ -7,33 +7,25 @@ namespace App\Filament\Pages;
 use App\Domains\Workflow\Actions\DeployProcessAction;
 use App\Domains\Workflow\Services\ServiceTasks\ServiceTaskRegistry;
 use Filament\Forms\Components\Hidden;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 
-/**
- * Designer گرافیکی BPMN با bpmn.js.
- *
- * شامل:
- *  - canvas برای طراحی graphical
- *  - properties panel سفارشی (با extensions mms:)
- *  - دکمه save که XML تولید می‌کند و از DeployProcessAction استفاده می‌کند
- */
 class BpmnDesignerPage extends Page implements HasForms
 {
     use InteractsWithForms;
 
-    protected static ?string $navigationIcon = 'heroicon-o-square-3-stack-3d';
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedSquare3Stack3d;
     protected static ?string $navigationGroup = 'گردش کار';
     protected static ?int $navigationSort = 1;
 
-    protected static string $view = 'filament.pages.bpmn-designer';
+    protected string $view = 'filament.pages.bpmn-designer';
 
     public ?array $data = [];
 
@@ -52,34 +44,39 @@ class BpmnDesignerPage extends Page implements HasForms
         $this->form->fill();
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form->schema([
-            Section::make('اطلاعات اولیه')->schema([
-                TextInput::make('process_key')
-                    ->label('کلید فرایند')
-                    ->required()
-                    ->maxLength(100)
-                    ->placeholder('meeting_minute_approval'),
-                TextInput::make('name')
-                    ->label('نام')
-                    ->required(),
-                TextInput::make('category')
-                    ->label('دسته')
-                    ->datalist(['meeting', 'task', 'approval', 'system']),
-                Toggle::make('publish_immediately')
-                    ->label('انتشار فوری')
-                    ->default(false),
-            ])->columns(2),
+        return $schema
+            ->components([
+                Section::make('اطلاعات اولیه')
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('process_key')
+                            ->label('کلید فرایند')
+                            ->required()
+                            ->maxLength(100)
+                            ->placeholder('meeting_minute_approval'),
+                        TextInput::make('name')
+                            ->label('نام')
+                            ->required(),
+                        TextInput::make('category')
+                            ->label('دسته')
+                            ->datalist(['meeting', 'task', 'approval', 'system']),
+                        Toggle::make('publish_immediately')
+                            ->label('انتشار فوری')
+                            ->default(false),
+                    ]),
 
-            Hidden::make('bpmn_xml'),
-        ])->statePath('data');
+                Hidden::make('bpmn_xml'),
+            ])
+            ->statePath('data');
     }
 
     public function getServiceTasksJson(): string
     {
         /** @var ServiceTaskRegistry $registry */
         $registry = app(ServiceTaskRegistry::class);
+
         return json_encode(array_values($registry->metadata()), JSON_UNESCAPED_UNICODE);
     }
 
@@ -93,6 +90,7 @@ class BpmnDesignerPage extends Page implements HasForms
                 ->body('XML فرایند خالی است. ابتدا در Designer طراحی کنید.')
                 ->danger()
                 ->send();
+
             return;
         }
 
