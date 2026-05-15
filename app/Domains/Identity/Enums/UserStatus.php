@@ -70,4 +70,13 @@ enum UserStatus: string implements HasColor, HasIcon, HasLabel
             ->mapWithKeys(fn ($c) => [$c->value => $c->label()])
             ->toArray();
     }
+
+    /**
+     * آیا کاربر با این وضعیت اجازه ورود دارد؟
+     * فقط وضعیت Active اجازه ورود می‌دهد.
+     */
+    public function canLogin(): bool
+    {
+        return $this === self::Active;
+    }
 }

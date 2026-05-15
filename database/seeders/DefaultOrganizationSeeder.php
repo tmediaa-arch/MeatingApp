@@ -54,11 +54,11 @@ class DefaultOrganizationSeeder extends Seeder
         }
 
         // ساختار نمونه
-        $rootCeo = $this->createUnit($org, null, 'CEO', 'مدیرعامل', OrgUnitType::Deputy);
+        $rootCeo = $this->createUnit($org, null, 'CEO', 'مدیرعامل', OrgUnitType::Organization);
 
-        $itDeputy = $this->createUnit($org, $rootCeo, 'IT-DEP', 'معاونت فناوری اطلاعات', OrgUnitType::Deputy);
-        $finDeputy = $this->createUnit($org, $rootCeo, 'FIN-DEP', 'معاونت مالی', OrgUnitType::Deputy);
-        $hrDeputy = $this->createUnit($org, $rootCeo, 'HR-DEP', 'معاونت منابع انسانی', OrgUnitType::Deputy);
+        $itDeputy = $this->createUnit($org, $rootCeo, 'IT-DEP', 'معاونت فناوری اطلاعات', OrgUnitType::Division);
+        $finDeputy = $this->createUnit($org, $rootCeo, 'FIN-DEP', 'معاونت مالی', OrgUnitType::Division);
+        $hrDeputy = $this->createUnit($org, $rootCeo, 'HR-DEP', 'معاونت منابع انسانی', OrgUnitType::Division);
 
         $this->createUnit($org, $itDeputy, 'IT-DEV', 'مدیریت توسعه', OrgUnitType::Department);
         $this->createUnit($org, $itDeputy, 'IT-OPS', 'مدیریت زیرساخت', OrgUnitType::Department);
@@ -95,14 +95,15 @@ class DefaultOrganizationSeeder extends Seeder
         $password = env('SUPER_ADMIN_PASSWORD', 'ChangeMe@123456');
         $email = env('SUPER_ADMIN_EMAIL', 'admin@example.com');
 
-        $user = User::firstOrCreate(
+        // updateOrCreate تا اجرای مجدد seeder بتواند admin خراب را ترمیم کند.
+        $user = User::updateOrCreate(
             ['username' => $username],
             [
                 'email' => $email,
                 'first_name' => 'مدیر',
                 'last_name' => 'سیستم',
                 'display_name' => 'مدیر سیستم',
-                'password' => $password, // hashed cast
+                'password' => Hash::make($password),
                 'password_changed_at' => now(),
                 'status' => UserStatus::Active,
                 'is_external' => false,

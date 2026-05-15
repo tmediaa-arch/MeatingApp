@@ -71,8 +71,8 @@ class BpmnXmlParser
             $process->registerXPathNamespace('mms', self::MMS_NS);
 
             return [
-                'process_id' => (string) $process['id'],
-                'process_name' => (string) ($process['name'] ?? ''),
+                'process_id' => (string) $this->attr($process, 'id', ''),
+                'process_name' => (string) $this->attr($process, 'name', ''),
                 'documentation' => $this->extractDocumentation($process),
                 'elements' => $this->extractElements($process),
                 'flows' => $this->extractFlows($process),
@@ -153,6 +153,23 @@ class BpmnXmlParser
         return $node;
     }
 
+    /**
+     * خواندن یک attribute بدون namespace از یک node.
+     *
+     * دسترسی آرایه‌ای ($node['id']) روی node هایی که از children(NS)
+     * گرفته شده‌اند، attribute های بدون namespace را برنمی‌گرداند.
+     * این helper با attributes() صریح آن مشکل را حل می‌کند.
+     */
+    private function attr(SimpleXMLElement $node, string $name, ?string $default = null): ?string
+    {
+        $attributes = $node->attributes();
+        if ($attributes !== null && isset($attributes[$name])) {
+            return (string) $attributes[$name];
+        }
+
+        return $default;
+    }
+
     private function findProcess(SimpleXMLElement $root): SimpleXMLElement
     {
         $processes = $this->ns($root)->xpath('//bpmn:process');
@@ -194,7 +211,7 @@ class BpmnXmlParser
             if ($localName === 'association') continue;
 
             // skip اگر id ندارد (مثل برخی annotation ها)
-            $elemId = (string) ($child['id'] ?? '');
+            $elemId = (string) $this->attr($child, 'id', '');
             if ($elemId === '') continue;
 
             if (!in_array($localName, $supportedTypes, true)) {
@@ -204,7 +221,7 @@ class BpmnXmlParser
             $element = [
                 'element_id' => $elemId,
                 'element_type' => $localName,
-                'name' => isset($child['name']) ? (string) $child['name'] : null,
+                'name' => $this->attr($child, 'name'),
                 'properties' => $this->extractElementProperties($child, $localName),
                 'form_schema' => $this->extractFormSchema($child),
                 'service_task_class' => null,
@@ -231,9 +248,9 @@ class BpmnXmlParser
         $byTarget = [];
 
         foreach ($this->ns($process)->xpath('./bpmn:sequenceFlow') as $flow) {
-            $flowId = (string) $flow['id'];
-            $source = (string) $flow['sourceRef'];
-            $target = (string) $flow['targetRef'];
+            $flowId = (string) $this->attr($flow, 'id', '');
+            $source = (string) $this->attr($flow, 'sourceRef', '');
+            $target = (string) $this->attr($flow, 'targetRef', '');
 
             $bySource[$source][] = $flowId;
             $byTarget[$target][] = $flowId;
@@ -289,14 +306,14 @@ class BpmnXmlParser
                 }
             }
             if (isset($bpmn->messageEventDefinition)) {
-                $props['message_ref'] = (string) $bpmn->messageEventDefinition['messageRef'];
+                $props['message_ref'] = (string) $this->attr($bpmn->messageEventDefinition, 'messageRef', '');
             }
         }
 
         // ── Boundary event attachedToRef ──
         if ($type === ElementType::BoundaryEvent->value) {
-            $props['attached_to'] = (string) $element['attachedToRef'];
-            $props['cancel_activity'] = ((string) ($element['cancelActivity'] ?? 'true')) === 'true';
+            $props['attached_to'] = (string) $this->attr($element, 'attachedToRef', '');
+            $props['cancel_activity'] = $this->attr($element, 'cancelActivity', 'true') === 'true';
         }
 
         // ── User task documentation ──
@@ -336,7 +353,7 @@ class BpmnXmlParser
 
         $config = [];
         foreach ($mms->serviceTaskConfig->children(self::MMS_NS) as $entry) {
-            $config[(string) $entry['key']] = (string) $entry;
+            $config[(string) $this->attr($entry, 'key', '')] = (string) $entry;
         }
         return $config;
     }
@@ -347,24 +364,22 @@ class BpmnXmlParser
 
         // یافتن default flows از gateways
         $defaultsByGateway = [];
-        foreach ($this->ns($process)->xpath('./bpmn:exclusiveGateway') as $gateway) {
-            if (isset($gateway['default'])) {
-                $defaultsByGateway[(string) $gateway['default']] = true;
-            }
-        }
-        foreach ($this->ns($process)->xpath('./bpmn:inclusiveGateway') as $gateway) {
-            if (isset($gateway['default'])) {
-                $defaultsByGateway[(string) $gateway['default']] = true;
+        foreach (['./bpmn:exclusiveGateway', './bpmn:inclusiveGateway'] as $gatewayPath) {
+            foreach ($this->ns($process)->xpath($gatewayPath) as $gateway) {
+                $default = $this->attr($gateway, 'default');
+                if ($default !== null && $default !== '') {
+                    $defaultsByGateway[$default] = true;
+                }
             }
         }
 
         foreach ($this->ns($process)->xpath('./bpmn:sequenceFlow') as $flow) {
-            $id = (string) $flow['id'];
+            $id = (string) $this->attr($flow, 'id', '');
             $f = [
                 'id' => $id,
-                'name' => isset($flow['name']) ? (string) $flow['name'] : null,
-                'source' => (string) $flow['sourceRef'],
-                'target' => (string) $flow['targetRef'],
+                'name' => $this->attr($flow, 'name'),
+                'source' => (string) $this->attr($flow, 'sourceRef', ''),
+                'target' => (string) $this->attr($flow, 'targetRef', ''),
                 'condition' => null,
                 'default' => isset($defaultsByGateway[$id]),
             ];
