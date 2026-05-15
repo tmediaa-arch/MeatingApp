@@ -10,6 +10,28 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
+/*
+ * `server` — نام مستعار برای دستور built-in `serve`.
+ * هر دو شکل کار می‌کنند: `php artisan serve` و `php artisan server`.
+ */
+Artisan::command(
+    'server {--host= : آدرس host} {--port= : شماره port} {--tries= : تعداد port برای تلاش} {--no-reload : عدم reload هنگام تغییر .env}',
+    function () {
+        $params = [];
+        foreach (['host', 'port', 'tries'] as $option) {
+            $value = $this->option($option);
+            if ($value !== null && $value !== '') {
+                $params['--' . $option] = $value;
+            }
+        }
+        if ($this->option('no-reload')) {
+            $params['--no-reload'] = true;
+        }
+
+        return $this->call('serve', $params);
+    },
+)->purpose('نام مستعار serve: اجرای سرور توسعه محلی');
+
 // ─────────────────────────────────────────────────────────
 // Scheduled commands
 // ─────────────────────────────────────────────────────────
