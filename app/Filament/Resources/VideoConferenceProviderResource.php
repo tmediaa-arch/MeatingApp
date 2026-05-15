@@ -113,8 +113,10 @@ class VideoConferenceProviderResource extends Resource
         ));
     }
 
-    private static function driverConfigFields(?string $driver): array
+    private static function driverConfigFields(string|VideoConferenceDriver|null $driver): array
     {
+        $driver = $driver instanceof VideoConferenceDriver ? $driver->value : $driver;
+
         return match ($driver) {
             'alocom' => [
                 TextInput::make('config.api_base_url')

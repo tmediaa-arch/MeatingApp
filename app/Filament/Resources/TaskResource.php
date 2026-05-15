@@ -11,7 +11,7 @@ use App\Domains\Tasks\Models\Task;
 use App\Filament\Admin\Schemas\FormLayout;
 use App\Filament\Resources\TaskResource\Pages;
 use App\Filament\Resources\TaskResource\RelationManagers;
-use Ariaieboy\Jalali\Forms\Components\JalaliDatePicker;
+use Filament\Forms\Components\DatePicker;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -82,7 +82,7 @@ class TaskResource extends Resource
                             ->relationship('approver', 'first_name')
                             ->searchable()
                             ->preload(),
-                        JalaliDatePicker::make('due_date')
+                        DatePicker::make('due_date')
                             ->label('مهلت'),
                     ]),
             ],
