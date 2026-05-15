@@ -1,4 +1,5 @@
 {{-- نمایش‌گر BPMN از طریق bpmn-js (نسخه CDN) --}}
+{{-- اگر BPMN فاقد بخش DI (طرح‌بندی گرافیکی) باشد، با bpmn-auto-layout طرح‌بندی تولید می‌شود. --}}
 <div
     x-data="bpmnViewer()"
     x-init="initViewer()"
@@ -20,22 +21,41 @@
     function bpmnViewer() {
         return {
             viewer: null,
-            initViewer() {
+
+            async initViewer() {
                 const xml = @json($getRecord()->bpmn_xml);
                 const containerId = 'bpmn-viewer-canvas-{{ $getRecord()->id }}';
+                const el = document.getElementById(containerId);
+
+                if (! xml || ! xml.trim()) {
+                    el.innerHTML = '<div class="p-4 text-gray-500">BPMN XML برای این فرایند ثبت نشده است.</div>';
+                    return;
+                }
 
                 this.viewer = new BpmnJS({ container: '#' + containerId });
 
-                this.viewer.importXML(xml).then(() => {
-                    const canvas = this.viewer.get('canvas');
-                    canvas.zoom('fit-viewport');
-                }).catch(err => {
-                    console.error('BPMN import error:', err);
-                    document.getElementById(containerId).innerHTML =
-                        '<div class="p-4 text-red-600">خطا در نمایش BPMN: ' + err.message + '</div>';
-                });
-            }
-        }
+                try {
+                    await this.render(xml);
+                } catch (err) {
+                    // معمولاً به دلیل نبود بخش DI: «no diagram to display».
+                    // طرح‌بندی را به‌صورت خودکار تولید و دوباره تلاش می‌کنیم.
+                    try {
+                        const { layoutProcess } = await import('https://esm.sh/bpmn-auto-layout@0.4.0');
+                        const laidOutXml = await layoutProcess(xml);
+                        await this.render(laidOutXml);
+                    } catch (layoutErr) {
+                        console.error('BPMN import error:', err, layoutErr);
+                        el.innerHTML = '<div class="p-4 text-red-600">خطا در نمایش BPMN: '
+                            + (layoutErr && layoutErr.message ? layoutErr.message : err.message) + '</div>';
+                    }
+                }
+            },
+
+            async render(xml) {
+                await this.viewer.importXML(xml);
+                this.viewer.get('canvas').zoom('fit-viewport');
+            },
+        };
     }
 </script>
 @endpush
