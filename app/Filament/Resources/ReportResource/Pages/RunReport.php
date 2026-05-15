@@ -24,7 +24,7 @@ class RunReport extends Page implements HasForms
     use InteractsWithForms;
 
     protected static string $resource = ReportResource::class;
-    protected static string $view = 'filament.resources.report.run';
+    protected string $view = 'filament.resources.report.run';
 
     public Report $record;
     public ?array $data = [];
