@@ -13,7 +13,7 @@ use App\Domains\ServiceRequests\Enums\ServiceRequestType;
 use App\Domains\ServiceRequests\Models\ServiceRequest;
 use App\Filament\Admin\Schemas\FormLayout;
 use App\Filament\Resources\ServiceRequestResource\Pages;
-use Ariaieboy\Jalali\Forms\Components\JalaliDateTimePicker;
+use Filament\Forms\Components\DateTimePicker;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\EditAction;
@@ -74,7 +74,7 @@ class ServiceRequestResource extends Resource
                             ->rows(3)
                             ->columnSpanFull(),
 
-                        JalaliDateTimePicker::make('required_at')
+                        DateTimePicker::make('required_at')
                             ->label('زمان مورد نیاز')
                             ->required()
                             ->minDate(now()),

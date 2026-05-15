@@ -94,16 +94,27 @@ class UserTaskResource extends Resource
 
                 Filter::make('mine')
                     ->label('فقط مال من')
-                    ->query(fn (Builder $q) => $q->forUser(auth()->user())),
+                    ->query(fn (Builder $query) => $query->where(function (Builder $q) {
+                        $q->where('assignee_user_id', auth()->id())
+                            ->orWhereJsonContains('candidate_user_ids', auth()->id());
+                    })),
 
                 Filter::make('open')
                     ->label('فقط باز')
-                    ->query(fn (Builder $q) => $q->open())
+                    ->query(fn (Builder $query) => $query->whereIn('status', [
+                        UserTaskStatus::Created->value,
+                        UserTaskStatus::Assigned->value,
+                        UserTaskStatus::Claimed->value,
+                    ]))
                     ->default(),
 
                 Filter::make('overdue')
                     ->label('فقط overdue')
-                    ->query(fn (Builder $q) => $q->overdue()),
+                    ->query(fn (Builder $query) => $query->whereIn('status', [
+                        UserTaskStatus::Created->value,
+                        UserTaskStatus::Assigned->value,
+                        UserTaskStatus::Claimed->value,
+                    ])->whereNotNull('due_at')->where('due_at', '<', now())),
             ])
             ->recordActions([
                 ActionGroup::make([

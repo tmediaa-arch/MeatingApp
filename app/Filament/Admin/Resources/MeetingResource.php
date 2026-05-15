@@ -12,8 +12,7 @@ use App\Domains\Shared\Enums\ConfidentialityLevel;
 use App\Filament\Admin\Resources\MeetingResource\Pages;
 use App\Filament\Admin\Resources\MeetingResource\RelationManagers;
 use App\Filament\Admin\Schemas\FormLayout;
-// NOTE: ariaieboy/filament-jalali component namespace; adjust if the installed package exposes a different FQCN.
-use Ariaieboy\Jalali\Forms\Components\JalaliDateTimePicker;
+use Filament\Forms\Components\DateTimePicker;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -80,12 +79,12 @@ class MeetingResource extends Resource
                     ->description('تاریخ شمسی، ساعت و نوع تکرار')
                     ->columns(2)
                     ->schema([
-                        JalaliDateTimePicker::make('scheduled_start_at')
+                        DateTimePicker::make('scheduled_start_at')
                             ->label('شروع جلسه')
                             ->required()
                             ->seconds(false)
                             ->minDate(now()),
-                        JalaliDateTimePicker::make('scheduled_end_at')
+                        DateTimePicker::make('scheduled_end_at')
                             ->label('پایان جلسه')
                             ->required()
                             ->seconds(false)
