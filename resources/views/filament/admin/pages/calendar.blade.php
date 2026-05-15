@@ -27,6 +27,18 @@
         </div>
     </div>
 
+    {{-- مودال اطلاعات/ایجاد جلسه --}}
+    <div id="cal-modal-overlay" style="display:none">
+        <div id="cal-modal-box">
+            <div id="cal-modal-header">
+                <span id="cal-modal-title"></span>
+                <button type="button" onclick="window.closeCalModal()" id="cal-modal-close">&times;</button>
+            </div>
+            <div id="cal-modal-body"></div>
+            <div id="cal-modal-actions"></div>
+        </div>
+    </div>
+
     @push('styles')
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css">
         <style>
@@ -46,15 +58,67 @@
                 padding: 2px 4px;
                 font-size: 0.875rem;
             }
-            .fc-event-popup {
-                position: absolute;
-                background: white;
-                padding: 1rem;
-                border-radius: 0.5rem;
-                box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-                z-index: 100;
-                min-width: 280px;
+            #meetings-calendar .fc-daygrid-day {
+                cursor: pointer;
             }
+            #cal-modal-overlay {
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.45);
+                z-index: 9999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            #cal-modal-box {
+                background: white;
+                border-radius: 0.75rem;
+                box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+                width: 90%;
+                max-width: 420px;
+                direction: rtl;
+                overflow: hidden;
+            }
+            .dark #cal-modal-box { background: #1f2937; color: #e5e7eb; }
+            #cal-modal-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0.85rem 1rem;
+                border-bottom: 1px solid #e5e7eb;
+                font-weight: 700;
+            }
+            .dark #cal-modal-header { border-color: #374151; }
+            #cal-modal-close {
+                background: none;
+                border: none;
+                font-size: 1.4rem;
+                line-height: 1;
+                cursor: pointer;
+                color: #6b7280;
+            }
+            #cal-modal-body { padding: 1rem; font-size: 0.9rem; }
+            #cal-modal-body .row { display: flex; justify-content: space-between; padding: 0.25rem 0; }
+            #cal-modal-body .row span:first-child { color: #6b7280; }
+            #cal-modal-actions {
+                padding: 0.75rem 1rem;
+                border-top: 1px solid #e5e7eb;
+                display: flex;
+                gap: 0.5rem;
+                justify-content: flex-start;
+            }
+            .dark #cal-modal-actions { border-color: #374151; }
+            .cal-btn {
+                padding: 0.45rem 0.9rem;
+                border-radius: 0.5rem;
+                font-size: 0.85rem;
+                cursor: pointer;
+                border: none;
+                text-decoration: none;
+                display: inline-block;
+            }
+            .cal-btn-primary { background: #4f46e5; color: white; }
+            .cal-btn-secondary { background: #e5e7eb; color: #374151; }
         </style>
     @endpush
 
@@ -164,12 +228,44 @@
                         }
                     },
 
-                    // کلیک روی رویداد → باز کردن صفحه view جلسه
+                    // کلیک روی رویداد → نمایش مودال اطلاعات جلسه
                     eventClick: (info) => {
                         info.jsEvent.preventDefault();
-                        if (info.event.extendedProps.url) {
-                            window.location.href = info.event.extendedProps.url;
-                        }
+                        const p = info.event.extendedProps;
+                        const rows = [
+                            ['وضعیت', p.status],
+                            ['نوع برگزاری', p.mode],
+                            ['سالن', p.room || '—'],
+                            ['رئیس جلسه', p.chairperson || '—'],
+                            ['زمان', p.jalali_start || ''],
+                        ];
+                        const body = rows.map(r =>
+                            '<div class="row"><span>' + r[0] + '</span><span>' + (r[1] ?? '') + '</span></div>'
+                        ).join('');
+                        const actions = p.url
+                            ? '<a class="cal-btn cal-btn-primary" href="' + p.url + '">مشاهده کامل</a>'
+                              + '<button class="cal-btn cal-btn-secondary" onclick="window.closeCalModal()">بستن</button>'
+                            : '<button class="cal-btn cal-btn-secondary" onclick="window.closeCalModal()">بستن</button>';
+                        window.openCalModal(info.event.title, body, actions);
+                    },
+
+                    // کلیک روی خانه تقویم → مودال ایجاد جلسه در آن تاریخ
+                    dateClick: (info) => {
+                        const [jy, jm, jd] = gregorianToJalali(
+                            info.date.getFullYear(),
+                            info.date.getMonth() + 1,
+                            info.date.getDate()
+                        );
+                        const jalaliLabel = toFarsiDigits(jd) + ' ' + jalaliMonths[jm - 1] + ' ' + toFarsiDigits(jy);
+                        const createHref = @json(route('filament.admin.resources.meetings.create'))
+                            + '?meeting_date=' + encodeURIComponent(info.dateStr);
+                        window.openCalModal(
+                            'ایجاد جلسه جدید',
+                            '<div class="row"><span>تاریخ انتخاب‌شده</span><span>' + jalaliLabel + '</span></div>'
+                                + '<p style="margin-top:.5rem;color:#6b7280">برای ساخت جلسه در این تاریخ ادامه دهید.</p>',
+                            '<a class="cal-btn cal-btn-primary" href="' + createHref + '">ایجاد جلسه</a>'
+                                + '<button class="cal-btn cal-btn-secondary" onclick="window.closeCalModal()">انصراف</button>'
+                        );
                     },
 
                     // drag&drop رویداد برای تغییر زمان
@@ -203,6 +299,22 @@
                 });
 
                 calendar.render();
+            });
+
+            // توابع مودال تقویم (سراسری تا onclick های inline به آن دسترسی داشته باشند)
+            window.openCalModal = (title, bodyHtml, actionsHtml) => {
+                document.getElementById('cal-modal-title').textContent = title;
+                document.getElementById('cal-modal-body').innerHTML = bodyHtml;
+                document.getElementById('cal-modal-actions').innerHTML = actionsHtml;
+                document.getElementById('cal-modal-overlay').style.display = 'flex';
+            };
+            window.closeCalModal = () => {
+                document.getElementById('cal-modal-overlay').style.display = 'none';
+            };
+            document.addEventListener('click', (e) => {
+                if (e.target && e.target.id === 'cal-modal-overlay') {
+                    window.closeCalModal();
+                }
             });
         </script>
     @endpush

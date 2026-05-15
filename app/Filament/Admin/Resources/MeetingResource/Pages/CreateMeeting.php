@@ -17,6 +17,28 @@ class CreateMeeting extends CreateRecord
 {
     protected static string $resource = MeetingResource::class;
 
+    /**
+     * اگر از تقویم با تاریخ مشخص وارد شده باشیم، زمان جلسه را پیش‌پر می‌کنیم.
+     */
+    public function mount(): void
+    {
+        parent::mount();
+
+        $date = request()->query('meeting_date');
+        if ($date) {
+            try {
+                $start = CarbonImmutable::parse($date)->setTime(9, 0);
+                $this->form->fill([
+                    ...$this->data,
+                    'scheduled_start_at' => $start,
+                    'scheduled_end_at' => $start->addHour(),
+                ]);
+            } catch (\Throwable) {
+                // تاریخ نامعتبر — نادیده گرفته می‌شود
+            }
+        }
+    }
+
     protected function handleRecordCreation(array $data): \Illuminate\Database\Eloquent\Model
     {
         // در Filament 3، Resource ها معمولاً مستقیماً Model::create می‌کنند.
