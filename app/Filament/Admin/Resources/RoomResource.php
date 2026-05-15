@@ -14,10 +14,11 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Forms\Components\KeyValue;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
@@ -167,13 +168,51 @@ class RoomResource extends Resource
                     ]),
 
                 Section::make('ساعات کاری')
-                    ->description('برای هر روز هفته، start و end را به فرمت HH:mm وارد کنید (مثلاً ۰۸:۰۰ تا ۱۷:۰۰)')
+                    ->description('برای هر روز هفته، ساعت شروع و پایان کار سالن را مشخص کنید')
                     ->collapsed()
                     ->schema([
-                        KeyValue::make('working_hours')
+                        Repeater::make('working_hours')
                             ->label('ساعات کاری')
-                            ->keyLabel('روز هفته')
-                            ->valueLabel('ساعت‌ها')
+                            ->schema([
+                                Select::make('day')
+                                    ->label('روز هفته')
+                                    ->options([
+                                        'sat' => 'شنبه',
+                                        'sun' => 'یکشنبه',
+                                        'mon' => 'دوشنبه',
+                                        'tue' => 'سه‌شنبه',
+                                        'wed' => 'چهارشنبه',
+                                        'thu' => 'پنجشنبه',
+                                        'fri' => 'جمعه',
+                                    ])
+                                    ->required()
+                                    ->distinct(),
+                                TimePicker::make('start')
+                                    ->label('ساعت شروع')
+                                    ->seconds(false),
+                                TimePicker::make('end')
+                                    ->label('ساعت پایان')
+                                    ->seconds(false),
+                            ])
+                            ->columns(3)
+                            ->addActionLabel('افزودن روز')
+                            ->formatStateUsing(fn ($state) => collect(is_array($state) ? $state : [])
+                                ->map(fn ($v, $k) => [
+                                    'day' => $k,
+                                    'start' => is_array($v) ? ($v['start'] ?? null) : null,
+                                    'end' => is_array($v) ? ($v['end'] ?? null) : null,
+                                ])
+                                ->values()
+                                ->all())
+                            ->dehydrateStateUsing(fn ($state) => collect(is_array($state) ? $state : [])
+                                ->filter(fn ($row) => filled($row['day'] ?? null))
+                                ->mapWithKeys(fn ($row) => [
+                                    $row['day'] => [
+                                        'start' => $row['start'] ?? null,
+                                        'end' => $row['end'] ?? null,
+                                    ],
+                                ])
+                                ->all())
                             ->columnSpanFull(),
                     ]),
             ],

@@ -14,7 +14,7 @@ use App\Filament\Resources\IntegrationProviderResource\Pages;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\KeyValue;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -78,9 +78,25 @@ class IntegrationProviderResource extends Resource
                     ->description('پیکربندی JSON specific به نوع provider')
                     ->collapsible()
                     ->schema([
-                        KeyValue::make('config')
+                        Repeater::make('config')
                             ->label('پارامترها')
-                            ->keyLabel('کلید')->valueLabel('مقدار')
+                            ->schema([
+                                TextInput::make('key')->label('کلید')->required(),
+                                TextInput::make('value')->label('مقدار'),
+                            ])
+                            ->columns(2)
+                            ->addActionLabel('افزودن پارامتر')
+                            ->formatStateUsing(fn ($state) => collect(is_array($state) ? $state : [])
+                                ->map(fn ($v, $k) => [
+                                    'key' => $k,
+                                    'value' => is_scalar($v) ? $v : json_encode($v, JSON_UNESCAPED_UNICODE),
+                                ])
+                                ->values()
+                                ->all())
+                            ->dehydrateStateUsing(fn ($state) => collect(is_array($state) ? $state : [])
+                                ->filter(fn ($row) => filled($row['key'] ?? null))
+                                ->mapWithKeys(fn ($row) => [$row['key'] => $row['value'] ?? null])
+                                ->all())
                             ->columnSpanFull(),
                     ]),
 
