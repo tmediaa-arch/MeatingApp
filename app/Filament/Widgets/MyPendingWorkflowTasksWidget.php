@@ -6,6 +6,7 @@ namespace App\Filament\Widgets;
 
 use App\Domains\Workflow\Enums\UserTaskStatus;
 use App\Domains\Workflow\Models\UserTask;
+use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -28,7 +29,7 @@ class MyPendingWorkflowTasksWidget extends StatsOverviewWidget
         return [
             Stat::make('UserTaskهای من', $open)
                 ->description($assigned > 0 ? "{$assigned} منتظر claim" : '—')
-                ->icon('heroicon-o-clipboard-document-check')
+                ->icon(Heroicon::OutlinedClipboardDocumentCheck)
                 ->color($overdue > 0 ? 'danger' : ($open > 0 ? 'warning' : 'success'))
                 ->url(route('filament.admin.pages.my-workflow-tasks')),
         ];

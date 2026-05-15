@@ -6,6 +6,7 @@ namespace App\Filament\Widgets;
 
 use App\Domains\Workflow\Enums\ProcessInstanceStatus;
 use App\Domains\Workflow\Models\ProcessInstance;
+use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -17,13 +18,13 @@ class ActiveInstancesWidget extends StatsOverviewWidget
     {
         return [
             Stat::make('Instance در حال اجرا', ProcessInstance::where('status', ProcessInstanceStatus::Running)->count())
-                ->icon('heroicon-o-play-circle')
+                ->icon(Heroicon::OutlinedPlayCircle)
                 ->color('info'),
             Stat::make('Instance متوقف', ProcessInstance::where('status', ProcessInstanceStatus::Suspended)->count())
-                ->icon('heroicon-o-pause-circle')
+                ->icon(Heroicon::OutlinedPauseCircle)
                 ->color('warning'),
             Stat::make('SLA رد شده', ProcessInstance::slaBreached()->count())
-                ->icon('heroicon-o-exclamation-triangle')
+                ->icon(Heroicon::OutlinedExclamationTriangle)
                 ->color('danger'),
         ];
     }

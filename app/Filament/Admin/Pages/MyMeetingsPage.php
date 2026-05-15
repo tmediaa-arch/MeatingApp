@@ -7,9 +7,12 @@ namespace App\Filament\Admin\Pages;
 use App\Domains\Invitations\Actions\RespondToInvitationAction;
 use App\Domains\Meetings\Models\Meeting;
 use App\Domains\Meetings\Models\MeetingParticipant;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
@@ -18,12 +21,12 @@ class MyMeetingsPage extends Page implements HasTable
 {
     use InteractsWithTable;
 
-    protected static ?string $navigationIcon = 'heroicon-o-user-circle';
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedUserCircle;
     protected static ?string $navigationLabel = 'جلسات من';
     protected static ?string $title = 'جلسات من';
-    protected static ?string $navigationGroup = 'مدیریت جلسات';
+    protected static string|\UnitEnum|null $navigationGroup = 'مدیریت جلسات';
     protected static ?int $navigationSort = 3;
-    protected static string $view = 'filament.admin.pages.my-meetings';
+    protected string $view = 'filament.admin.pages.my-meetings';
 
     public function table(Table $table): Table
     {
@@ -52,9 +55,7 @@ class MyMeetingsPage extends Page implements HasTable
                     ->default('—'),
                 \Filament\Tables\Columns\TextColumn::make('status')
                     ->label('وضعیت')
-                    ->badge()
-                    ->color(fn ($state) => $state->color())
-                    ->formatStateUsing(fn ($state) => $state->label()),
+                    ->badge(),
                 \Filament\Tables\Columns\TextColumn::make('my_invitation_status')
                     ->label('پاسخ من')
                     ->getStateUsing(function (Meeting $record) {
@@ -65,34 +66,36 @@ class MyMeetingsPage extends Page implements HasTable
                     }),
             ])
             ->defaultSort('scheduled_start_at', 'asc')
-            ->actions([
-                \Filament\Tables\Actions\Action::make('view')
-                    ->label('مشاهده')
-                    ->icon('heroicon-o-eye')
-                    ->url(fn (Meeting $record) => route('filament.admin.resources.meetings.view', $record)),
-                \Filament\Tables\Actions\Action::make('accept')
-                    ->label('قبول')
-                    ->icon('heroicon-o-check')
-                    ->color('success')
-                    ->visible(fn (Meeting $record) => $this->canRespond($record))
-                    ->action(fn (Meeting $record) => $this->respondToInvitation($record, 'accepted')),
-                \Filament\Tables\Actions\Action::make('decline')
-                    ->label('رد')
-                    ->icon('heroicon-o-x-mark')
-                    ->color('danger')
-                    ->form([
-                        Textarea::make('note')
-                            ->label('دلیل (اختیاری)')
-                            ->rows(2),
-                    ])
-                    ->visible(fn (Meeting $record) => $this->canRespond($record))
-                    ->action(fn (Meeting $record, array $data) => $this->respondToInvitation($record, 'declined', $data['note'] ?? null)),
-                \Filament\Tables\Actions\Action::make('tentative')
-                    ->label('شاید')
-                    ->icon('heroicon-o-question-mark-circle')
-                    ->color('warning')
-                    ->visible(fn (Meeting $record) => $this->canRespond($record))
-                    ->action(fn (Meeting $record) => $this->respondToInvitation($record, 'tentative')),
+            ->recordActions([
+                ActionGroup::make([
+                    Action::make('view')
+                        ->label('مشاهده')
+                        ->icon(Heroicon::OutlinedEye)
+                        ->url(fn (Meeting $record) => route('filament.admin.resources.meetings.view', $record)),
+                    Action::make('accept')
+                        ->label('قبول')
+                        ->icon(Heroicon::OutlinedCheck)
+                        ->color('success')
+                        ->visible(fn (Meeting $record) => $this->canRespond($record))
+                        ->action(fn (Meeting $record) => $this->respondToInvitation($record, 'accepted')),
+                    Action::make('decline')
+                        ->label('رد')
+                        ->icon(Heroicon::OutlinedXMark)
+                        ->color('danger')
+                        ->schema([
+                            Textarea::make('note')
+                                ->label('دلیل (اختیاری)')
+                                ->rows(2),
+                        ])
+                        ->visible(fn (Meeting $record) => $this->canRespond($record))
+                        ->action(fn (Meeting $record, array $data) => $this->respondToInvitation($record, 'declined', $data['note'] ?? null)),
+                    Action::make('tentative')
+                        ->label('شاید')
+                        ->icon(Heroicon::OutlinedQuestionMarkCircle)
+                        ->color('warning')
+                        ->visible(fn (Meeting $record) => $this->canRespond($record))
+                        ->action(fn (Meeting $record) => $this->respondToInvitation($record, 'tentative')),
+                ]),
             ]);
     }
 

@@ -24,9 +24,7 @@ class ViewUserTask extends ViewRecord
                 TextEntry::make('description')->label('شرح'),
                 TextEntry::make('status')
                     ->label('وضعیت')
-                    ->badge()
-                    ->color(fn (UserTaskStatus $s) => $s->color())
-                    ->formatStateUsing(fn (UserTaskStatus $s) => $s->label()),
+                    ->badge(),
                 TextEntry::make('priority')->label('اولویت')->badge(),
                 TextEntry::make('assignee.name')->label('مجری')->placeholder('—'),
                 TextEntry::make('due_at')->label('مهلت')->dateTime('Y/m/d H:i')->placeholder('—'),

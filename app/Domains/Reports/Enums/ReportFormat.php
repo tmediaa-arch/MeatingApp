@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Domains\Reports\Enums;
 
-enum ReportFormat: string
+use Filament\Support\Contracts\HasLabel;
+
+enum ReportFormat: string implements HasLabel
 {
     case Html = 'html';
     case Pdf = 'pdf';
@@ -43,5 +45,10 @@ enum ReportFormat: string
             self::Csv => 'csv',
             self::Json => 'json',
         };
+    }
+
+    public function getLabel(): string
+    {
+        return $this->label();
     }
 }

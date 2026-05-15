@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\ServiceRequestResource\RelationManagers;
 
-use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Actions\CreateAction;
+use Filament\Forms\Components\Textarea;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 
@@ -16,10 +17,10 @@ class UpdatesRelationManager extends RelationManager
 
     protected static ?string $title = 'تاریخچه';
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form->schema([
-            Forms\Components\Textarea::make('comment')
+        return $schema->components([
+            Textarea::make('comment')
                 ->label('یادداشت')
                 ->required()
                 ->rows(3),
@@ -56,7 +57,7 @@ class UpdatesRelationManager extends RelationManager
             ])
             ->defaultSort('occurred_at', 'desc')
             ->headerActions([
-                Tables\Actions\CreateAction::make()
+                CreateAction::make()
                     ->label('افزودن یادداشت')
                     ->using(function (array $data) {
                         return $this->getOwnerRecord()->updates()->create([
@@ -66,12 +67,12 @@ class UpdatesRelationManager extends RelationManager
                         ]);
                     }),
             ])
-            ->actions([]) // append-only — هیچ ویرایش/حذف
+            ->recordActions([])
             ->paginated([10, 25, 50]);
     }
 
     public function isReadOnly(): bool
     {
-        return false; // فقط برای create comment باز است
+        return false;
     }
 }

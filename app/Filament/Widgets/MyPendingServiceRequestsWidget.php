@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Widgets;
 
 use App\Domains\ServiceRequests\Models\ServiceRequest;
+use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -34,16 +35,16 @@ class MyPendingServiceRequestsWidget extends BaseWidget
 
         return [
             Stat::make('پیش‌نویس', $draft)
-                ->icon('heroicon-o-pencil')
+                ->icon(Heroicon::OutlinedPencil)
                 ->color('gray'),
             Stat::make('در انتظار', $submitted)
-                ->icon('heroicon-o-clock')
+                ->icon(Heroicon::OutlinedClock)
                 ->color('warning'),
             Stat::make('در حال انجام', $inProgress)
-                ->icon('heroicon-o-cog-6-tooth')
+                ->icon(Heroicon::OutlinedCog6Tooth)
                 ->color('info'),
             Stat::make('Overdue', $overdue)
-                ->icon('heroicon-o-exclamation-triangle')
+                ->icon(Heroicon::OutlinedExclamationTriangle)
                 ->color('danger'),
         ];
     }

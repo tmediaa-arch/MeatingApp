@@ -52,9 +52,8 @@ class CreateMeeting extends CreateRecord
         return app(CreateMeetingAction::class)->execute($dto);
     }
 
-    protected function mutateFormDataBeforeCreate(array $data): array
+    protected function mutateDataBeforeCreate(array $data): array
     {
-        // ست کردن organization_id بصورت خودکار
         if (empty($data['organization_id']) && auth()->user()->employee) {
             $data['organization_id'] = auth()->user()->employee->organization_id;
         }

@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Domains\Meetings\Enums;
 
-enum MeetingMode: string
+use Filament\Support\Contracts\HasIcon;
+use Filament\Support\Contracts\HasLabel;
+
+enum MeetingMode: string implements HasIcon, HasLabel
 {
     case InPerson = 'in_person';
     case Online = 'online';
@@ -43,5 +46,15 @@ enum MeetingMode: string
         return collect(self::cases())
             ->mapWithKeys(fn ($c) => [$c->value => $c->label()])
             ->toArray();
+    }
+
+    public function getLabel(): string
+    {
+        return $this->label();
+    }
+
+    public function getIcon(): string|\BackedEnum|\Illuminate\Contracts\Support\Htmlable|null
+    {
+        return $this->icon();
     }
 }

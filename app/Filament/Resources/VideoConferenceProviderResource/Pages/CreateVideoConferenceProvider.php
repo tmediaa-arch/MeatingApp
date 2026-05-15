@@ -12,10 +12,7 @@ class CreateVideoConferenceProvider extends CreateRecord
 {
     protected static string $resource = VideoConferenceProviderResource::class;
 
-    /**
-     * Config در form به‌صورت array است؛ قبل از ذخیره encrypt می‌شود.
-     */
-    protected function mutateFormDataBeforeCreate(array $data): array
+    protected function mutateDataBeforeCreate(array $data): array
     {
         $config = $data['config'] ?? [];
         unset($data['config']);

@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace App\Domains\Tasks\Enums;
 
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasIcon;
+use Filament\Support\Contracts\HasLabel;
+
 /**
  * چرخه عمر کامل وظیفه.
  *
  * Open → Assigned → InProgress → Submitted → UnderReview →
  *   Completed | NeedsRevision (→ InProgress) | Cancelled
  */
-enum TaskStatus: string
+enum TaskStatus: string implements HasColor, HasIcon, HasLabel
 {
     case Open = 'open';                  // ایجاد شد، هنوز ارجاع نشده
     case Assigned = 'assigned';          // ارجاع شد، کار شروع نشده
@@ -104,5 +108,20 @@ enum TaskStatus: string
         return collect(self::cases())
             ->mapWithKeys(fn (self $s) => [$s->value => $s->label()])
             ->toArray();
+    }
+
+    public function getLabel(): string
+    {
+        return $this->label();
+    }
+
+    public function getColor(): string|array|null
+    {
+        return $this->color();
+    }
+
+    public function getIcon(): string|\BackedEnum|\Illuminate\Contracts\Support\Htmlable|null
+    {
+        return $this->icon();
     }
 }

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Domains\Exports\Enums;
 
-enum ExportType: string
+use Filament\Support\Contracts\HasLabel;
+
+enum ExportType: string implements HasLabel
 {
     case Meetings = 'meetings';
     case Minutes = 'minutes';
@@ -27,5 +29,10 @@ enum ExportType: string
             self::CustomReport => 'گزارش سفارشی',
             self::Users => 'کاربران',
         };
+    }
+
+    public function getLabel(): string
+    {
+        return $this->label();
     }
 }

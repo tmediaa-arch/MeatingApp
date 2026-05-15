@@ -5,18 +5,25 @@ declare(strict_types=1);
 namespace App\Filament\Admin\Resources;
 
 use App\Domains\Audit\Models\SecurityEvent;
-use Filament\Forms;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Textarea;
 use Filament\Resources\Resource;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 
 class SecurityEventResource extends Resource
 {
     protected static ?string $model = SecurityEvent::class;
-    protected static ?string $navigationIcon = 'heroicon-o-exclamation-triangle';
-    protected static ?string $navigationGroup = 'ممیزی و امنیت';
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedShieldExclamation;
+    protected static string|\UnitEnum|null $navigationGroup = 'ممیزی و امنیت';
     protected static ?int $navigationSort = 85;
+    protected static ?string $recordTitleAttribute = 'event';
 
     public static function getModelLabel(): string
     {
@@ -81,7 +88,7 @@ class SecurityEventResource extends Resource
             ])
             ->defaultSort('detected_at', 'desc')
             ->filters([
-                Tables\Filters\SelectFilter::make('severity')
+                SelectFilter::make('severity')
                     ->label('شدت')
                     ->options([
                         'critical' => 'بحرانی',
@@ -89,30 +96,32 @@ class SecurityEventResource extends Resource
                         'notice' => 'اطلاع',
                     ]),
 
-                Tables\Filters\Filter::make('unreviewed')
+                Filter::make('unreviewed')
                     ->label('بررسی نشده')
                     ->query(fn ($q) => $q->whereNull('reviewed_at')),
             ])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
+            ->recordActions([
+                ActionGroup::make([
+                    ViewAction::make(),
 
-                Tables\Actions\Action::make('review')
-                    ->label('ثبت بررسی')
-                    ->icon('heroicon-o-check-circle')
-                    ->color('success')
-                    ->visible(fn (SecurityEvent $r) => $r->reviewed_at === null)
-                    ->form([
-                        Forms\Components\Textarea::make('review_notes')
-                            ->label('یادداشت بررسی')
-                            ->required(),
-                    ])
-                    ->action(function (SecurityEvent $record, array $data) {
-                        $record->update([
-                            'reviewed_by' => auth()->id(),
-                            'reviewed_at' => now(),
-                            'review_notes' => $data['review_notes'],
-                        ]);
-                    }),
+                    Action::make('review')
+                        ->label('ثبت بررسی')
+                        ->icon(Heroicon::OutlinedCheckCircle)
+                        ->color('success')
+                        ->visible(fn (SecurityEvent $r) => $r->reviewed_at === null)
+                        ->schema([
+                            Textarea::make('review_notes')
+                                ->label('یادداشت بررسی')
+                                ->required(),
+                        ])
+                        ->action(function (SecurityEvent $record, array $data) {
+                            $record->update([
+                                'reviewed_by' => auth()->id(),
+                                'reviewed_at' => now(),
+                                'review_notes' => $data['review_notes'],
+                            ]);
+                        }),
+                ]),
             ]);
     }
 

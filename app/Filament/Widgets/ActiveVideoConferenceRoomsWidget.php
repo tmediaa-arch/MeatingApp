@@ -7,6 +7,7 @@ namespace App\Filament\Widgets;
 use App\Domains\VideoConference\Enums\HealthStatus;
 use App\Domains\VideoConference\Models\VideoConferenceProvider;
 use App\Domains\VideoConference\Models\VideoConferenceRoom;
+use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -37,19 +38,19 @@ class ActiveVideoConferenceRoomsWidget extends BaseWidget
 
         return [
             Stat::make('در حال برگزاری', $inProgress)
-                ->icon('heroicon-o-video-camera')
+                ->icon(Heroicon::OutlinedVideoCamera)
                 ->color('success'),
 
             Stat::make('برنامه امروز', $scheduledToday)
-                ->icon('heroicon-o-calendar')
+                ->icon(Heroicon::OutlinedCalendar)
                 ->color('info'),
 
             Stat::make('پایان امروز', $endedToday)
-                ->icon('heroicon-o-check-circle')
+                ->icon(Heroicon::OutlinedCheckCircle)
                 ->color('gray'),
 
             Stat::make('Provider ناسالم', $unhealthyProviders)
-                ->icon('heroicon-o-exclamation-triangle')
+                ->icon(Heroicon::OutlinedExclamationTriangle)
                 ->color($unhealthyProviders > 0 ? 'danger' : 'success'),
         ];
     }

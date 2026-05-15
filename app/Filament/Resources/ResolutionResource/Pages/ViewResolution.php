@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace App\Filament\Resources\ResolutionResource\Pages;
 
 use App\Domains\Resolutions\Actions\CastVoteAction;
@@ -13,6 +15,7 @@ use Filament\Actions;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Support\Icons\Heroicon;
 
 class ViewResolution extends ViewRecord
 {
@@ -25,7 +28,7 @@ class ViewResolution extends ViewRecord
 
             Actions\Action::make('openVoting')
                 ->label('شروع رأی‌گیری')
-                ->icon('heroicon-o-hand-raised')
+                ->icon(Heroicon::OutlinedHandRaised)
                 ->color('info')
                 ->visible(fn () => $this->record->requires_voting
                     && !$this->record->voting_opened_at
@@ -38,13 +41,13 @@ class ViewResolution extends ViewRecord
 
             Actions\Action::make('castVote')
                 ->label('ثبت رأی من')
-                ->icon('heroicon-o-pencil')
+                ->icon(Heroicon::OutlinedPencil)
                 ->color('primary')
                 ->visible(fn () => auth()->user()->can('vote', $this->record))
-                ->form([
+                ->schema([
                     Forms\Components\Select::make('vote')
                         ->label('رأی')
-                        ->options(VoteValue::options())
+                        ->options(VoteValue::class)
                         ->required(),
                     Forms\Components\Textarea::make('rationale')->label('توضیح اختیاری')->rows(2),
                 ])
@@ -60,7 +63,7 @@ class ViewResolution extends ViewRecord
 
             Actions\Action::make('closeVoting')
                 ->label('بستن رأی‌گیری')
-                ->icon('heroicon-o-lock-closed')
+                ->icon(Heroicon::OutlinedLockClosed)
                 ->color('warning')
                 ->visible(fn () => auth()->user()->can('closeVoting', $this->record))
                 ->requiresConfirmation()
@@ -71,7 +74,7 @@ class ViewResolution extends ViewRecord
 
             Actions\Action::make('startExecution')
                 ->label('شروع اجرا')
-                ->icon('heroicon-o-play')
+                ->icon(Heroicon::OutlinedPlay)
                 ->color('success')
                 ->visible(fn () => $this->record->status === ResolutionStatus::Approved)
                 ->requiresConfirmation()
@@ -81,7 +84,6 @@ class ViewResolution extends ViewRecord
                         ResolutionStatus::InExecution,
                         'شروع اجرای مصوبه',
                     );
-                    // تولید Tasks
                     $tasks = app(CreateTasksFromResolutionAction::class)->execute($this->record);
                     Notification::make()
                         ->success()
@@ -92,7 +94,7 @@ class ViewResolution extends ViewRecord
 
             Actions\Action::make('markCompleted')
                 ->label('اعلام اتمام')
-                ->icon('heroicon-o-check-badge')
+                ->icon(Heroicon::OutlinedCheckBadge)
                 ->color('success')
                 ->visible(fn () => $this->record->status === ResolutionStatus::InExecution)
                 ->requiresConfirmation()

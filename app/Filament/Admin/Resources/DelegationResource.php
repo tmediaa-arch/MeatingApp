@@ -7,18 +7,31 @@ namespace App\Filament\Admin\Resources;
 use App\Domains\Identity\Actions\RevokeDelegationAction;
 use App\Domains\Identity\Models\UserDelegation;
 use App\Filament\Admin\Resources\DelegationResource\Pages;
-use Filament\Forms;
-use Filament\Forms\Form;
+use App\Filament\Admin\Schemas\FormLayout;
+use Ariaieboy\Jalali\Forms\Components\JalaliDateTimePicker;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 class DelegationResource extends Resource
 {
     protected static ?string $model = UserDelegation::class;
-    protected static ?string $navigationIcon = 'heroicon-o-arrow-uturn-right';
-    protected static ?string $navigationGroup = 'هویت و دسترسی';
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedPaperAirplane;
+    protected static string|\UnitEnum|null $navigationGroup = 'هویت و دسترسی';
     protected static ?int $navigationSort = 18;
+    protected static ?string $recordTitleAttribute = 'id';
 
     public static function getModelLabel(): string
     {
@@ -30,87 +43,91 @@ class DelegationResource extends Resource
         return 'تفویض‌های اختیار';
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form->schema([
-            Forms\Components\Section::make('طرفین تفویض')
-                ->columns(2)
-                ->schema([
-                    Forms\Components\Select::make('delegator_user_id')
-                        ->label('تفویض‌کننده')
-                        ->relationship('delegator', 'username')
-                        ->getOptionLabelFromRecordUsing(fn ($r) => $r->resolved_display_name . ' (' . $r->username . ')')
-                        ->searchable(['username', 'first_name', 'last_name'])
-                        ->preload()
-                        ->required(),
+        return $schema->components(FormLayout::withSidebar(
+            main: [
+                Section::make('طرفین تفویض')
+                    ->columns(2)
+                    ->schema([
+                        Select::make('delegator_user_id')
+                            ->label('تفویض‌کننده')
+                            ->relationship('delegator', 'username')
+                            ->getOptionLabelFromRecordUsing(fn ($r) => $r->resolved_display_name . ' (' . $r->username . ')')
+                            ->searchable(['username', 'first_name', 'last_name'])
+                            ->preload()
+                            ->required(),
 
-                    Forms\Components\Select::make('delegate_user_id')
-                        ->label('کاربر نماینده')
-                        ->relationship('delegate', 'username')
-                        ->getOptionLabelFromRecordUsing(fn ($r) => $r->resolved_display_name . ' (' . $r->username . ')')
-                        ->searchable(['username', 'first_name', 'last_name'])
-                        ->preload()
-                        ->required()
-                        ->different('delegator_user_id'),
-                ]),
+                        Select::make('delegate_user_id')
+                            ->label('کاربر نماینده')
+                            ->relationship('delegate', 'username')
+                            ->getOptionLabelFromRecordUsing(fn ($r) => $r->resolved_display_name . ' (' . $r->username . ')')
+                            ->searchable(['username', 'first_name', 'last_name'])
+                            ->preload()
+                            ->required()
+                            ->different('delegator_user_id'),
+                    ]),
 
-            Forms\Components\Section::make('محدوده و زمان')
-                ->columns(2)
-                ->schema([
-                    Forms\Components\Select::make('scope')
-                        ->label('محدوده')
-                        ->options([
-                            'all' => 'همه (کامل)',
-                            'meetings' => 'مدیریت جلسات',
-                            'signatures' => 'امضا صورتجلسه/مصوبه',
-                            'approvals' => 'تأییدات',
-                            'tasks' => 'وظایف و مصوبات',
-                            'inbox' => 'کارتابل',
-                        ])
-                        ->default('meetings')
-                        ->required()
-                        ->reactive(),
+                Section::make('محدوده و زمان')
+                    ->columns(2)
+                    ->schema([
+                        Select::make('scope')
+                            ->label('محدوده')
+                            ->options([
+                                'all' => 'همه (کامل)',
+                                'meetings' => 'مدیریت جلسات',
+                                'signatures' => 'امضا صورتجلسه/مصوبه',
+                                'approvals' => 'تأییدات',
+                                'tasks' => 'وظایف و مصوبات',
+                                'inbox' => 'کارتابل',
+                            ])
+                            ->default('meetings')
+                            ->required()
+                            ->reactive(),
 
-                    Forms\Components\Select::make('status')
-                        ->label('وضعیت')
-                        ->options([
-                            'pending' => 'در انتظار',
-                            'active' => 'فعال',
-                            'expired' => 'منقضی',
-                            'revoked' => 'لغو شده',
-                            'completed' => 'تکمیل شده',
-                        ])
-                        ->default('pending'),
+                        Select::make('status')
+                            ->label('وضعیت')
+                            ->options([
+                                'pending' => 'در انتظار',
+                                'active' => 'فعال',
+                                'expired' => 'منقضی',
+                                'revoked' => 'لغو شده',
+                                'completed' => 'تکمیل شده',
+                            ])
+                            ->default('pending'),
 
-                    Forms\Components\DateTimePicker::make('starts_at')
-                        ->label('شروع')
-                        ->required()
-                        ->jalali(),
+                        JalaliDateTimePicker::make('starts_at')
+                            ->label('شروع')
+                            ->required(),
 
-                    Forms\Components\DateTimePicker::make('ends_at')
-                        ->label('پایان')
-                        ->required()
-                        ->after('starts_at')
-                        ->jalali(),
-                ]),
+                        JalaliDateTimePicker::make('ends_at')
+                            ->label('پایان')
+                            ->required()
+                            ->after('starts_at'),
+                    ]),
 
-            Forms\Components\Section::make('توضیحات')
-                ->schema([
-                    Forms\Components\Textarea::make('reason')
-                        ->label('دلیل تفویض')
-                        ->rows(3)
-                        ->columnSpanFull(),
+                Section::make('توضیحات')
+                    ->schema([
+                        Textarea::make('reason')
+                            ->label('دلیل تفویض')
+                            ->rows(3)
+                            ->columnSpanFull(),
 
-                    Forms\Components\TextInput::make('decree_number')
-                        ->label('شماره ابلاغ')
-                        ->maxLength(100),
-
-                    Forms\Components\Toggle::make('notify_on_action')
-                        ->label('اطلاع‌رسانی هنگام اقدام')
-                        ->default(true)
-                        ->helperText('در صورت فعال بودن، با هر اقدام نماینده، تفویض‌کننده مطلع می‌شود.'),
-                ]),
-        ]);
+                        TextInput::make('decree_number')
+                            ->label('شماره ابلاغ')
+                            ->maxLength(100),
+                    ]),
+            ],
+            sidebar: [
+                Section::make('تنظیمات')
+                    ->schema([
+                        Toggle::make('notify_on_action')
+                            ->label('اطلاع‌رسانی هنگام اقدام')
+                            ->default(true)
+                            ->helperText('در صورت فعال بودن، با هر اقدام نماینده، تفویض‌کننده مطلع می‌شود.'),
+                    ]),
+            ],
+        ));
     }
 
     public static function table(Table $table): Table
@@ -167,7 +184,7 @@ class DelegationResource extends Resource
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
-                Tables\Filters\SelectFilter::make('status')
+                SelectFilter::make('status')
                     ->label('وضعیت')
                     ->options([
                         'pending' => 'در انتظار',
@@ -177,7 +194,7 @@ class DelegationResource extends Resource
                         'completed' => 'تکمیل شده',
                     ]),
 
-                Tables\Filters\SelectFilter::make('scope')
+                SelectFilter::make('scope')
                     ->label('محدوده')
                     ->options([
                         'all' => 'همه',
@@ -188,23 +205,25 @@ class DelegationResource extends Resource
                         'inbox' => 'کارتابل',
                     ]),
             ])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make()
-                    ->visible(fn (UserDelegation $r) => in_array($r->status, ['pending'], true)),
+            ->recordActions([
+                ActionGroup::make([
+                    ViewAction::make(),
+                    EditAction::make()
+                        ->visible(fn (UserDelegation $r) => in_array($r->status, ['pending'], true)),
 
-                Tables\Actions\Action::make('revoke')
-                    ->label('لغو تفویض')
-                    ->icon('heroicon-o-no-symbol')
-                    ->color('danger')
-                    ->visible(fn (UserDelegation $r) => in_array($r->status, ['pending', 'active'], true))
-                    ->requiresConfirmation()
-                    ->form([
-                        Forms\Components\Textarea::make('reason')->label('دلیل لغو')->required(),
-                    ])
-                    ->action(function (UserDelegation $record, array $data) {
-                        app(RevokeDelegationAction::class)->execute($record, $data['reason']);
-                    }),
+                    Action::make('revoke')
+                        ->label('لغو تفویض')
+                        ->icon(Heroicon::OutlinedXCircle)
+                        ->color('danger')
+                        ->visible(fn (UserDelegation $r) => in_array($r->status, ['pending', 'active'], true))
+                        ->requiresConfirmation()
+                        ->schema([
+                            Textarea::make('reason')->label('دلیل لغو')->required(),
+                        ])
+                        ->action(function (UserDelegation $record, array $data) {
+                            app(RevokeDelegationAction::class)->execute($record, $data['reason']);
+                        }),
+                ]),
             ]);
     }
 

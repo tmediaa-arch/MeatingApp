@@ -24,7 +24,7 @@ Route::get('/calendar/feed/{token}', [CalendarFeedController::class, 'show'])
  * Sanctum personal access tokens برای احراز هویت.
  * Middleware اضافی برای rate limit و IP whitelist.
  */
-Route::prefix('api/v1')
+Route::prefix('v1')
     ->middleware(['auth:sanctum', EnforceApiTokenLimitsMiddleware::class])
     ->group(function () {
         // Health و info

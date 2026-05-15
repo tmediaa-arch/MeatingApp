@@ -12,6 +12,7 @@ use App\Filament\Resources\MinuteResource;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Support\Icons\Heroicon;
 
 class ViewMinute extends ViewRecord
 {
@@ -25,7 +26,7 @@ class ViewMinute extends ViewRecord
 
             Actions\Action::make('sendForReview')
                 ->label('ارسال برای بازبینی')
-                ->icon('heroicon-o-paper-airplane')
+                ->icon(Heroicon::OutlinedPaperAirplane)
                 ->color('warning')
                 ->requiresConfirmation()
                 ->visible(fn () => $this->record->status === MinuteStatus::Draft)
@@ -37,7 +38,7 @@ class ViewMinute extends ViewRecord
 
             Actions\Action::make('signAsSecretary')
                 ->label('امضای دبیر')
-                ->icon('heroicon-o-finger-print')
+                ->icon(Heroicon::OutlinedFingerPrint)
                 ->color('info')
                 ->requiresConfirmation()
                 ->visible(fn () => auth()->user()->can('signAsSecretary', $this->record))
@@ -49,7 +50,7 @@ class ViewMinute extends ViewRecord
 
             Actions\Action::make('signAsChairperson')
                 ->label('امضای رئیس')
-                ->icon('heroicon-o-finger-print')
+                ->icon(Heroicon::OutlinedFingerPrint)
                 ->color('success')
                 ->requiresConfirmation()
                 ->visible(fn () => auth()->user()->can('signAsChairperson', $this->record))
@@ -61,7 +62,7 @@ class ViewMinute extends ViewRecord
 
             Actions\Action::make('publish')
                 ->label('انتشار')
-                ->icon('heroicon-o-check-badge')
+                ->icon(Heroicon::OutlinedCheckBadge)
                 ->color('success')
                 ->requiresConfirmation()
                 ->modalHeading('انتشار صورتجلسه')
@@ -74,7 +75,7 @@ class ViewMinute extends ViewRecord
 
             Actions\Action::make('downloadPdf')
                 ->label('دانلود PDF')
-                ->icon('heroicon-o-arrow-down-tray')
+                ->icon(Heroicon::OutlinedArrowDownTray)
                 ->color('gray')
                 ->visible(fn () => $this->record->pdf_path !== null)
                 ->action(function () {

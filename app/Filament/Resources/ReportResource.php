@@ -7,11 +7,23 @@ namespace App\Filament\Resources;
 use App\Domains\Reports\Enums\ReportCategory;
 use App\Domains\Reports\Enums\ReportFormat;
 use App\Domains\Reports\Models\Report;
+use App\Filament\Admin\Schemas\FormLayout;
 use App\Filament\Resources\ReportResource\Pages;
-use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -19,9 +31,10 @@ class ReportResource extends Resource
 {
     protected static ?string $model = Report::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-document-chart-bar';
-    protected static ?string $navigationGroup = 'گزارش‌ها';
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentChartBar;
+    protected static string|\UnitEnum|null $navigationGroup = 'گزارش‌ها';
     protected static ?int $navigationSort = 1;
+    protected static ?string $recordTitleAttribute = 'display_name';
 
     public static function getModelLabel(): string
     {
@@ -33,43 +46,50 @@ class ReportResource extends Resource
         return 'گزارش‌ها';
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form->schema([
-            Forms\Components\Section::make('اطلاعات گزارش')
-                ->schema([
-                    Forms\Components\TextInput::make('display_name')
-                        ->label('نام نمایشی')->required()->maxLength(200),
+        return $schema->components(FormLayout::withSidebar(
+            main: [
+                Section::make('اطلاعات گزارش')
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('display_name')
+                            ->label('نام نمایشی')->required()->maxLength(200),
 
-                    Forms\Components\TextInput::make('key')
-                        ->label('کلید')->required()->maxLength(100)
-                        ->helperText('یکتا، snake_case (مثلاً: meetings.summary)'),
+                        TextInput::make('key')
+                            ->label('کلید')->required()->maxLength(100)
+                            ->helperText('یکتا، snake_case (مثلاً: meetings.summary)'),
 
-                    Forms\Components\Select::make('category')
-                        ->label('دسته')
-                        ->options(collect(ReportCategory::cases())->mapWithKeys(fn ($c) => [$c->value => $c->label()]))
-                        ->required(),
+                        Select::make('category')
+                            ->label('دسته')
+                            ->options(ReportCategory::class)
+                            ->required(),
 
-                    Forms\Components\Textarea::make('description')
-                        ->label('توضیحات')->rows(3),
+                        Textarea::make('description')
+                            ->label('توضیحات')->rows(3),
 
-                    Forms\Components\TextInput::make('handler_class')
-                        ->label('کلاس Handler')->required()->maxLength(200)
-                        ->disabled(fn ($record) => $record?->is_system),
-                ])->columns(2),
+                        TextInput::make('handler_class')
+                            ->label('کلاس Handler')->required()->maxLength(200)
+                            ->disabled(fn ($record) => $record?->is_system),
+                    ]),
 
-            Forms\Components\Section::make('فرمت‌ها و Cache')
-                ->schema([
-                    Forms\Components\CheckboxList::make('supported_formats')
-                        ->label('فرمت‌های پشتیبانی‌شده')
-                        ->options(collect(ReportFormat::cases())->mapWithKeys(fn ($f) => [$f->value => $f->label()])),
-
-                    Forms\Components\Toggle::make('is_cacheable')->label('قابل Cache'),
-                    Forms\Components\TextInput::make('cache_ttl_minutes')
-                        ->label('TTL Cache (دقیقه)')->numeric()->default(60),
-                    Forms\Components\Toggle::make('is_active')->label('فعال')->default(true),
-                ])->columns(2),
-        ]);
+                Section::make('فرمت‌ها')
+                    ->schema([
+                        CheckboxList::make('supported_formats')
+                            ->label('فرمت‌های پشتیبانی‌شده')
+                            ->options(ReportFormat::class),
+                    ]),
+            ],
+            sidebar: [
+                Section::make('Cache و وضعیت')
+                    ->schema([
+                        Toggle::make('is_cacheable')->label('قابل Cache'),
+                        TextInput::make('cache_ttl_minutes')
+                            ->label('TTL Cache (دقیقه)')->numeric()->default(60),
+                        Toggle::make('is_active')->label('فعال')->default(true),
+                    ]),
+            ],
+        ));
     }
 
     public static function table(Table $table): Table
@@ -81,8 +101,7 @@ class ReportResource extends Resource
                 Tables\Columns\TextColumn::make('key')
                     ->label('کلید')->copyable()->fontFamily('mono')->size('sm'),
                 Tables\Columns\TextColumn::make('category')
-                    ->label('دسته')->badge()
-                    ->formatStateUsing(fn ($state) => $state instanceof ReportCategory ? $state->label() : $state),
+                    ->label('دسته')->badge(),
                 Tables\Columns\IconColumn::make('is_cacheable')->label('Cache')->boolean(),
                 Tables\Columns\IconColumn::make('is_system')->label('سیستمی')->boolean(),
                 Tables\Columns\IconColumn::make('is_active')->label('فعال')->boolean(),
@@ -90,25 +109,27 @@ class ReportResource extends Resource
                     ->label('تعداد اجراها')->counts('runs')->sortable(),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('category')
-                    ->options(collect(ReportCategory::cases())->mapWithKeys(fn ($c) => [$c->value => $c->label()])),
-                Tables\Filters\TernaryFilter::make('is_active')->label('فعال'),
-                Tables\Filters\TernaryFilter::make('is_system')->label('سیستمی'),
+                SelectFilter::make('category')
+                    ->options(ReportCategory::class),
+                TernaryFilter::make('is_active')->label('فعال'),
+                TernaryFilter::make('is_system')->label('سیستمی'),
             ])
-            ->actions([
-                Tables\Actions\Action::make('run')
-                    ->label('اجرا')
-                    ->icon('heroicon-o-play')
-                    ->color('primary')
-                    ->url(fn (Report $record) => Pages\RunReport::getUrl(['record' => $record]))
-                    ->visible(fn (Report $record) => $record->is_active),
-                Tables\Actions\Action::make('history')
-                    ->label('تاریخچه')
-                    ->icon('heroicon-o-clock')
-                    ->color('gray')
-                    ->url(fn (Report $record) => ReportRunResource::getUrl('index', ['tableFilters[report_id][value]' => $record->id])),
-                Tables\Actions\EditAction::make()
-                    ->visible(fn (Report $record) => !$record->is_system),
+            ->recordActions([
+                ActionGroup::make([
+                    Action::make('run')
+                        ->label('اجرا')
+                        ->icon(Heroicon::OutlinedPlay)
+                        ->color('primary')
+                        ->url(fn (Report $record) => Pages\RunReport::getUrl(['record' => $record]))
+                        ->visible(fn (Report $record) => $record->is_active),
+                    Action::make('history')
+                        ->label('تاریخچه')
+                        ->icon(Heroicon::OutlinedClock)
+                        ->color('gray')
+                        ->url(fn (Report $record) => ReportRunResource::getUrl('index', ['tableFilters[report_id][value]' => $record->id])),
+                    EditAction::make()
+                        ->visible(fn (Report $record) => !$record->is_system),
+                ]),
             ])
             ->defaultSort('category');
     }

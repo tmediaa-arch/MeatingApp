@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Domains\ServiceRequests\Enums;
 
-enum ServiceRequestStatus: string
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
+
+enum ServiceRequestStatus: string implements HasColor, HasLabel
 {
     case Draft = 'draft';
     case Submitted = 'submitted';
@@ -72,5 +75,15 @@ enum ServiceRequestStatus: string
         return collect(self::cases())
             ->mapWithKeys(fn ($s) => [$s->value => $s->label()])
             ->toArray();
+    }
+
+    public function getLabel(): string
+    {
+        return $this->label();
+    }
+
+    public function getColor(): string|array|null
+    {
+        return $this->color();
     }
 }

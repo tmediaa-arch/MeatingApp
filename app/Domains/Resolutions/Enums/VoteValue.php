@@ -2,7 +2,11 @@
 declare(strict_types=1);
 namespace App\Domains\Resolutions\Enums;
 
-enum VoteValue: string
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasIcon;
+use Filament\Support\Contracts\HasLabel;
+
+enum VoteValue: string implements HasColor, HasIcon, HasLabel
 {
     case For = 'for';
     case Against = 'against';
@@ -40,5 +44,20 @@ enum VoteValue: string
         return collect(self::cases())
             ->mapWithKeys(fn (self $s) => [$s->value => $s->label()])
             ->toArray();
+    }
+
+    public function getLabel(): string
+    {
+        return $this->label();
+    }
+
+    public function getColor(): string|array|null
+    {
+        return $this->color();
+    }
+
+    public function getIcon(): string|\BackedEnum|\Illuminate\Contracts\Support\Htmlable|null
+    {
+        return $this->icon();
     }
 }

@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Domains\Minutes\Enums\MinuteStatus;
 use App\Domains\Minutes\Models\Minute;
+use Filament\Actions\Action;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -52,8 +53,8 @@ class PendingSignaturesWidget extends BaseWidget
                     })
                     ->badge(),
             ])
-            ->actions([
-                Tables\Actions\Action::make('view')
+            ->recordActions([
+                Action::make('view')
                     ->label('مشاهده')
                     ->url(fn ($record) => route('filament.admin.resources.minutes.view', $record)),
             ]);

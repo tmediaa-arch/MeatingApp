@@ -8,22 +8,33 @@ use App\Domains\VideoConference\Actions\CheckProviderHealthAction;
 use App\Domains\VideoConference\Enums\HealthStatus;
 use App\Domains\VideoConference\Enums\VideoConferenceDriver;
 use App\Domains\VideoConference\Models\VideoConferenceProvider;
-use App\Domains\VideoConference\Services\VideoConferenceProviderManager;
+use App\Filament\Admin\Schemas\FormLayout;
 use App\Filament\Resources\VideoConferenceProviderResource\Pages;
-use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 
 class VideoConferenceProviderResource extends Resource
 {
     protected static ?string $model = VideoConferenceProvider::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-video-camera';
-    protected static ?string $navigationGroup = 'ویدئوکنفرانس';
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedVideoCamera;
+    protected static string|\UnitEnum|null $navigationGroup = 'ویدئوکنفرانس';
     protected static ?int $navigationSort = 5;
+    protected static ?string $recordTitleAttribute = 'name';
 
     public static function getModelLabel(): string
     {
@@ -35,120 +46,131 @@ class VideoConferenceProviderResource extends Resource
         return 'Providerهای ویدئوکنفرانس';
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form->schema([
-            Forms\Components\Section::make('اطلاعات پایه')->schema([
-                Forms\Components\Select::make('organization_id')
-                    ->label('سازمان')
-                    ->relationship('organization', 'name')
-                    ->required()
-                    ->searchable()
-                    ->preload(),
+        return $schema->components(FormLayout::withSidebar(
+            main: [
+                Section::make('اطلاعات پایه')
+                    ->columns(2)
+                    ->schema([
+                        Select::make('organization_id')
+                            ->label('سازمان')
+                            ->relationship('organization', 'name')
+                            ->required()
+                            ->searchable()
+                            ->preload(),
 
-                Forms\Components\TextInput::make('name')
-                    ->label('نام')
-                    ->required()
-                    ->maxLength(255),
+                        TextInput::make('name')
+                            ->label('نام')
+                            ->required()
+                            ->maxLength(255),
 
-                Forms\Components\Select::make('driver')
-                    ->label('Driver')
-                    ->options(VideoConferenceDriver::options())
-                    ->required()
-                    ->reactive(),
+                        Select::make('driver')
+                            ->label('Driver')
+                            ->options(VideoConferenceDriver::class)
+                            ->required()
+                            ->live(),
+                    ]),
 
-                Forms\Components\Toggle::make('is_active')
-                    ->label('فعال')
-                    ->default(true),
+                Section::make('پیکربندی Driver')
+                    ->description('تنظیمات هر driver متفاوت است. این مقادیر به‌صورت encrypted ذخیره می‌شوند.')
+                    ->columns(2)
+                    ->visible(fn ($get) => filled($get('driver')))
+                    ->schema(function ($get) {
+                        return self::driverConfigFields($get('driver'));
+                    }),
 
-                Forms\Components\Toggle::make('is_default')
-                    ->label('پیش‌فرض سازمان')
-                    ->helperText('در صورت true، انتخاب پیش‌فرض هنگام ایجاد اتاق است.'),
-            ])->columns(2),
+                Section::make('قابلیت‌ها و محدودیت‌ها')
+                    ->columns(2)
+                    ->collapsible()
+                    ->schema([
+                        TextInput::make('max_concurrent_meetings')
+                            ->label('حداکثر جلسات همزمان')
+                            ->numeric()
+                            ->helperText('خالی = نامحدود'),
 
-            Forms\Components\Section::make('پیکربندی Driver')
-                ->description('تنظیمات هر driver متفاوت است. این مقادیر به‌صورت encrypted ذخیره می‌شوند.')
-                ->schema(function (Forms\Get $get) {
-                    return self::driverConfigFields($get('driver'));
-                })
-                ->columns(2)
-                ->visible(fn (Forms\Get $get) => filled($get('driver'))),
+                        TextInput::make('max_participants_per_meeting')
+                            ->label('حداکثر شرکت‌کنندگان هر جلسه')
+                            ->numeric(),
 
-            Forms\Components\Section::make('قابلیت‌ها و محدودیت‌ها')->schema([
-                Forms\Components\TextInput::make('max_concurrent_meetings')
-                    ->label('حداکثر جلسات همزمان')
-                    ->numeric()
-                    ->helperText('خالی = نامحدود'),
+                        Toggle::make('supports_recording')->label('پشتیبانی از ضبط'),
+                        Toggle::make('supports_streaming')->label('پشتیبانی از پخش زنده'),
+                        Toggle::make('supports_breakout_rooms')->label('Breakout Rooms'),
+                    ]),
+            ],
+            sidebar: [
+                Section::make('وضعیت')
+                    ->schema([
+                        Toggle::make('is_active')
+                            ->label('فعال')
+                            ->default(true),
 
-                Forms\Components\TextInput::make('max_participants_per_meeting')
-                    ->label('حداکثر شرکت‌کنندگان هر جلسه')
-                    ->numeric(),
-
-                Forms\Components\Toggle::make('supports_recording')->label('پشتیبانی از ضبط'),
-                Forms\Components\Toggle::make('supports_streaming')->label('پشتیبانی از پخش زنده'),
-                Forms\Components\Toggle::make('supports_breakout_rooms')->label('Breakout Rooms'),
-            ])->columns(2)->collapsible(),
-        ]);
+                        Toggle::make('is_default')
+                            ->label('پیش‌فرض سازمان')
+                            ->helperText('در صورت true، انتخاب پیش‌فرض هنگام ایجاد اتاق است.'),
+                    ]),
+            ],
+        ));
     }
 
     private static function driverConfigFields(?string $driver): array
     {
         return match ($driver) {
             'alocom' => [
-                Forms\Components\TextInput::make('config.api_base_url')
+                TextInput::make('config.api_base_url')
                     ->label('API Base URL')
                     ->required()
                     ->url(),
-                Forms\Components\TextInput::make('config.api_token')
+                TextInput::make('config.api_token')
                     ->label('API Token')
                     ->required()
                     ->password()
                     ->revealable(),
-                Forms\Components\TextInput::make('config.tenant_id')
+                TextInput::make('config.tenant_id')
                     ->label('Tenant ID')
                     ->required(),
             ],
             'jitsi' => [
-                Forms\Components\TextInput::make('config.base_url')
+                TextInput::make('config.base_url')
                     ->label('Base URL')
                     ->required()
                     ->url(),
-                Forms\Components\TextInput::make('config.jwt_secret')
+                TextInput::make('config.jwt_secret')
                     ->label('JWT Secret')
                     ->required()
                     ->password()
                     ->revealable(),
-                Forms\Components\TextInput::make('config.jwt_app_id')
+                TextInput::make('config.jwt_app_id')
                     ->label('JWT App ID')
                     ->required(),
-                Forms\Components\TextInput::make('config.management_url')
+                TextInput::make('config.management_url')
                     ->label('Management URL (اختیاری)')
                     ->helperText('برای استفاده از Jibri recording'),
-                Forms\Components\TextInput::make('config.management_token')
+                TextInput::make('config.management_token')
                     ->label('Management Token (اختیاری)')
                     ->password()
                     ->revealable(),
             ],
             'bigbluebutton' => [
-                Forms\Components\TextInput::make('config.base_url')
+                TextInput::make('config.base_url')
                     ->label('Base URL')
                     ->required()
                     ->url(),
-                Forms\Components\TextInput::make('config.shared_secret')
+                TextInput::make('config.shared_secret')
                     ->label('Shared Secret')
                     ->required()
                     ->password()
                     ->revealable(),
-                Forms\Components\TextInput::make('config.logout_url')
+                TextInput::make('config.logout_url')
                     ->label('Logout URL')
                     ->url(),
             ],
             'null' => [
-                Forms\Components\TextInput::make('config.manual_host_url')
+                TextInput::make('config.manual_host_url')
                     ->label('Host URL پیش‌فرض')
                     ->url()
                     ->helperText('اگر تنظیم نشود، یک URL مصنوعی تولید می‌شود'),
-                Forms\Components\TextInput::make('config.manual_attendee_url')
+                TextInput::make('config.manual_attendee_url')
                     ->label('Attendee URL پیش‌فرض')
                     ->url(),
             ],
@@ -167,8 +189,7 @@ class VideoConferenceProviderResource extends Resource
 
                 Tables\Columns\TextColumn::make('driver')
                     ->label('Driver')
-                    ->badge()
-                    ->formatStateUsing(fn (VideoConferenceDriver $d) => $d->label()),
+                    ->badge(),
 
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('فعال')
@@ -180,9 +201,7 @@ class VideoConferenceProviderResource extends Resource
 
                 Tables\Columns\TextColumn::make('health_status')
                     ->label('سلامت')
-                    ->badge()
-                    ->color(fn (HealthStatus $s) => $s->color())
-                    ->formatStateUsing(fn (HealthStatus $s) => $s->label()),
+                    ->badge(),
 
                 Tables\Columns\TextColumn::make('active_rooms_count')
                     ->label('اتاق‌های فعال')
@@ -199,47 +218,47 @@ class VideoConferenceProviderResource extends Resource
                     ->toggleable(),
             ])
             ->filters([
-                Tables\Filters\TernaryFilter::make('is_active')->label('فعال'),
-                Tables\Filters\SelectFilter::make('driver')
+                TernaryFilter::make('is_active')->label('فعال'),
+                SelectFilter::make('driver')
                     ->label('Driver')
-                    ->options(VideoConferenceDriver::options()),
-                Tables\Filters\SelectFilter::make('health_status')
+                    ->options(VideoConferenceDriver::class),
+                SelectFilter::make('health_status')
                     ->label('سلامت')
-                    ->options(collect(HealthStatus::cases())
-                        ->mapWithKeys(fn ($s) => [$s->value => $s->label()])
-                        ->toArray()),
+                    ->options(HealthStatus::class),
             ])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+            ->recordActions([
+                ActionGroup::make([
+                    ViewAction::make(),
+                    EditAction::make(),
 
-                Tables\Actions\Action::make('check_health')
-                    ->label('بررسی سلامت')
-                    ->icon('heroicon-o-heart')
-                    ->color('info')
-                    ->action(function (VideoConferenceProvider $provider) {
-                        $result = app(CheckProviderHealthAction::class)->execute($provider);
-                        Notification::make()
-                            ->title("سلامت: {$result->health_status->label()}")
-                            ->body($result->health_message ?? '')
-                            ->{$result->health_status->isUsable() ? 'success' : 'danger'}()
-                            ->send();
-                    }),
+                    Action::make('check_health')
+                        ->label('بررسی سلامت')
+                        ->icon(Heroicon::OutlinedHeart)
+                        ->color('info')
+                        ->action(function (VideoConferenceProvider $provider) {
+                            $result = app(CheckProviderHealthAction::class)->execute($provider);
+                            Notification::make()
+                                ->title("سلامت: {$result->health_status->label()}")
+                                ->body($result->health_message ?? '')
+                                ->{$result->health_status->isUsable() ? 'success' : 'danger'}()
+                                ->send();
+                        }),
 
-                Tables\Actions\Action::make('set_default')
-                    ->label('پیش‌فرض کن')
-                    ->icon('heroicon-o-star')
-                    ->color('warning')
-                    ->visible(fn (VideoConferenceProvider $p) => !$p->is_default)
-                    ->requiresConfirmation()
-                    ->action(function (VideoConferenceProvider $provider) {
-                        \DB::transaction(function () use ($provider) {
-                            VideoConferenceProvider::where('organization_id', $provider->organization_id)
-                                ->update(['is_default' => false]);
-                            $provider->update(['is_default' => true]);
-                        });
-                        Notification::make()->title('به‌عنوان پیش‌فرض ثبت شد')->success()->send();
-                    }),
+                    Action::make('set_default')
+                        ->label('پیش‌فرض کن')
+                        ->icon(Heroicon::OutlinedStar)
+                        ->color('warning')
+                        ->visible(fn (VideoConferenceProvider $p) => !$p->is_default)
+                        ->requiresConfirmation()
+                        ->action(function (VideoConferenceProvider $provider) {
+                            \DB::transaction(function () use ($provider) {
+                                VideoConferenceProvider::where('organization_id', $provider->organization_id)
+                                    ->update(['is_default' => false]);
+                                $provider->update(['is_default' => true]);
+                            });
+                            Notification::make()->title('به‌عنوان پیش‌فرض ثبت شد')->success()->send();
+                        }),
+                ]),
             ]);
     }
 
@@ -249,13 +268,6 @@ class VideoConferenceProviderResource extends Resource
             'index' => Pages\ListVideoConferenceProviders::route('/'),
             'create' => Pages\CreateVideoConferenceProvider::route('/create'),
             'edit' => Pages\EditVideoConferenceProvider::route('/{record}/edit'),
-        ];
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            \App\Filament\Resources\VideoConferenceProviderResource\RelationManagers\RoomsRelationManager::class,
         ];
     }
 }

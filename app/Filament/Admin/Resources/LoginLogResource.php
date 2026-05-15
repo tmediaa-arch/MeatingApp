@@ -5,17 +5,22 @@ declare(strict_types=1);
 namespace App\Filament\Admin\Resources;
 
 use App\Domains\Audit\Models\LoginLog;
+use Filament\Forms\Components\DatePicker;
 use Filament\Resources\Resource;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 
 class LoginLogResource extends Resource
 {
     protected static ?string $model = LoginLog::class;
-    protected static ?string $navigationIcon = 'heroicon-o-finger-print';
-    protected static ?string $navigationGroup = 'ممیزی و امنیت';
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedArrowLeftEndOnRectangle;
+    protected static string|\UnitEnum|null $navigationGroup = 'ممیزی و امنیت';
     protected static ?int $navigationSort = 82;
+    protected static ?string $recordTitleAttribute = 'username_attempted';
 
     public static function getModelLabel(): string
     {
@@ -93,7 +98,7 @@ class LoginLogResource extends Resource
             ])
             ->defaultSort('performed_at', 'desc')
             ->filters([
-                Tables\Filters\SelectFilter::make('result')
+                SelectFilter::make('result')
                     ->label('نتیجه')
                     ->multiple()
                     ->options([
@@ -105,10 +110,10 @@ class LoginLogResource extends Resource
                         'mfa_failed' => 'MFA ناموفق',
                     ]),
 
-                Tables\Filters\Filter::make('performed_at')
-                    ->form([
-                        \Filament\Forms\Components\DatePicker::make('from')->label('از'),
-                        \Filament\Forms\Components\DatePicker::make('until')->label('تا'),
+                Filter::make('performed_at')
+                    ->schema([
+                        DatePicker::make('from')->label('از'),
+                        DatePicker::make('until')->label('تا'),
                     ])
                     ->query(function ($query, array $data) {
                         return $query

@@ -8,15 +8,16 @@ use App\Domains\Calendar\Services\JalaliCalendarService;
 use App\Domains\Meetings\Models\Meeting;
 use Carbon\CarbonImmutable;
 use Filament\Pages\Page;
+use Filament\Support\Icons\Heroicon;
 
 class CalendarPage extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-calendar';
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedCalendar;
     protected static ?string $navigationLabel = 'تقویم جلسات';
     protected static ?string $title = 'تقویم جلسات';
-    protected static ?string $navigationGroup = 'مدیریت جلسات';
+    protected static string|\UnitEnum|null $navigationGroup = 'مدیریت جلسات';
     protected static ?int $navigationSort = 2;
-    protected static string $view = 'filament.admin.pages.calendar';
+    protected string $view = 'filament.admin.pages.calendar';
 
     public ?int $currentJalaliYear = null;
     public ?int $currentJalaliMonth = null;
@@ -28,12 +29,6 @@ class CalendarPage extends Page
         $this->currentJalaliMonth = $jalali->getMonth();
     }
 
-    /**
-     * این متد از فرانت‌اند (FullCalendar Shamsi) با تاریخ‌های Gregorian فراخوانی می‌شود
-     * و رویدادهای آن بازه را برمی‌گرداند.
-     *
-     * @return array<array{id, title, start, end, color, ...}>
-     */
     public function getEvents(string $startIso, string $endIso): array
     {
         $start = CarbonImmutable::parse($startIso);
@@ -46,8 +41,7 @@ class CalendarPage extends Page
             ->with(['room', 'chairperson'])
             ->between($start, $end);
 
-        // دسترسی: کاربر فقط جلسات قابل مشاهده برای خودش را می‌بیند
-        if (!$user->hasRole('super-admin') && !$user->hasPermissionTo('meeting.view_all')) {
+        if (! $user->hasRole('super-admin') && ! $user->hasPermissionTo('meeting.view_all')) {
             $query->forUser($user);
         }
 
@@ -74,28 +68,24 @@ class CalendarPage extends Page
     private function statusColor(string $status): string
     {
         return match ($status) {
-            'draft' => '#9ca3af',           // gray
-            'scheduled' => '#3b82f6',       // blue
-            'invitations_sent' => '#06b6d4', // cyan
-            'in_progress' => '#10b981',     // green
-            'paused' => '#f59e0b',          // amber
-            'completed' => '#6b7280',       // gray-dark
-            'cancelled' => '#ef4444',       // red
-            'postponed' => '#f97316',       // orange
-            default => '#6366f1',           // indigo
+            'draft' => '#9ca3af',
+            'scheduled' => '#3b82f6',
+            'invitations_sent' => '#06b6d4',
+            'in_progress' => '#10b981',
+            'paused' => '#f59e0b',
+            'completed' => '#6b7280',
+            'cancelled' => '#ef4444',
+            'postponed' => '#f97316',
+            default => '#6366f1',
         };
     }
 
-    /**
-     * Listener برای drag/drop تغییر زمان جلسه از روی تقویم
-     */
     public function rescheduleMeeting(int $meetingId, string $newStartIso, string $newEndIso): array
     {
         try {
             $meeting = Meeting::findOrFail($meetingId);
 
-            // policy check
-            if (!auth()->user()->can('update', $meeting)) {
+            if (! auth()->user()->can('update', $meeting)) {
                 return ['success' => false, 'message' => 'دسترسی غیرمجاز'];
             }
 

@@ -24,7 +24,7 @@ class EditUser extends EditRecord
     /**
      * در حالت ویرایش، password را فقط در صورت ارائه به‌روز می‌کنیم
      */
-    protected function mutateFormDataBeforeSave(array $data): array
+    protected function mutateDataBeforeSave(array $data): array
     {
         if (empty($data['password'])) {
             unset($data['password']);

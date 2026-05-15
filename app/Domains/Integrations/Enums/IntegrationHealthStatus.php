@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Domains\Integrations\Enums;
 
-enum IntegrationHealthStatus: string
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
+
+enum IntegrationHealthStatus: string implements HasColor, HasLabel
 {
     case Healthy = 'healthy';
     case Degraded = 'degraded';
@@ -29,5 +32,15 @@ enum IntegrationHealthStatus: string
             self::Down => 'danger',
             self::Unknown => 'gray',
         };
+    }
+
+    public function getLabel(): string
+    {
+        return $this->label();
+    }
+
+    public function getColor(): string|array|null
+    {
+        return $this->color();
     }
 }

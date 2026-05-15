@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Widgets;
 
 use App\Domains\Notifications\Models\NotificationOutbox;
+use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -32,7 +33,7 @@ class UnreadInboxWidget extends StatsOverviewWidget
         return [
             Stat::make('اعلان‌های خوانده‌نشده', $unread)
                 ->description($unread > 0 ? 'منتظر مشاهده' : 'همه را خوانده‌اید')
-                ->descriptionIcon('heroicon-m-inbox')
+                ->descriptionIcon(Heroicon::MiniInbox)
                 ->color($unread > 5 ? 'danger' : ($unread > 0 ? 'warning' : 'success')),
 
             Stat::make('اعلان امروز', $today)

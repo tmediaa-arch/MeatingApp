@@ -1,8 +1,9 @@
 <?php
+
 declare(strict_types=1);
+
 namespace App\Filament\Resources\ResolutionResource\RelationManagers;
 
-use App\Domains\Resolutions\Enums\VoteValue;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -19,9 +20,7 @@ class VotesRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('voter.full_name')->label('رأی‌دهنده'),
                 Tables\Columns\TextColumn::make('vote')
                     ->label('رأی')
-                    ->badge()
-                    ->color(fn (VoteValue $v) => $v->color())
-                    ->formatStateUsing(fn (VoteValue $v) => $v->label()),
+                    ->badge(),
                 Tables\Columns\TextColumn::make('weight')->label('وزن'),
                 Tables\Columns\IconColumn::make('is_proxy')
                     ->label('تفویض شده')

@@ -9,7 +9,7 @@ class CreateFile extends CreateRecord
 {
     protected static string $resource = FileResource::class;
 
-    protected function mutateFormDataBeforeCreate(array $data): array
+    protected function mutateDataBeforeCreate(array $data): array
     {
         // محاسبه hash و metadata
         if (!empty($data['storage_path']) && file_exists(storage_path('app/' . $data['storage_path']))) {

@@ -7,21 +7,17 @@ namespace App\Filament\Pages;
 use App\Domains\Dashboards\Models\Dashboard;
 use App\Domains\Dashboards\Services\DashboardService;
 use Filament\Pages\Page;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Auth;
 
-/**
- * صفحه نمایش داشبورد — هر کاربر می‌تواند داشبوردهای مجاز خود را ببیند.
- *
- * Widget ها در گرید ۱۲ ستونی Chart.js / table / list render می‌شوند.
- */
 class DashboardViewPage extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-chart-pie';
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedChartPie;
     protected static ?string $navigationLabel = 'داشبوردها';
-    protected static ?string $navigationGroup = 'داشبوردها';
+    protected static string|\UnitEnum|null $navigationGroup = 'داشبوردها';
     protected static ?int $navigationSort = 1;
 
-    protected static string $view = 'filament.pages.dashboard-view';
+    protected string $view = 'filament.pages.dashboard-view';
 
     public ?int $selectedDashboardId = null;
     public ?Dashboard $currentDashboard = null;

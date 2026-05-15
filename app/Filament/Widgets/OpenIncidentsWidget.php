@@ -6,6 +6,7 @@ namespace App\Filament\Widgets;
 
 use App\Domains\Workflow\Models\ProcessIncident;
 use App\Domains\Workflow\Models\UserTask;
+use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -25,10 +26,10 @@ class OpenIncidentsWidget extends StatsOverviewWidget
         return [
             Stat::make('Incident باز', $count)
                 ->description(empty($byType) ? '—' : 'پرتکرار: ' . array_key_first($byType))
-                ->icon('heroicon-o-exclamation-circle')
+                ->icon(Heroicon::OutlinedExclamationCircle)
                 ->color($count > 0 ? 'danger' : 'success'),
             Stat::make('UserTask overdue', UserTask::overdue()->count())
-                ->icon('heroicon-o-clock')
+                ->icon(Heroicon::OutlinedClock)
                 ->color('danger'),
         ];
     }

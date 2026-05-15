@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Domains\Exports\Enums;
 
-enum ExportStatus: string
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
+
+enum ExportStatus: string implements HasColor, HasLabel
 {
     case Queued = 'queued';
     case Processing = 'processing';
@@ -37,5 +40,15 @@ enum ExportStatus: string
     public function isTerminal(): bool
     {
         return in_array($this, [self::Completed, self::Failed, self::Expired], true);
+    }
+
+    public function getLabel(): string
+    {
+        return $this->label();
+    }
+
+    public function getColor(): string|array|null
+    {
+        return $this->color();
     }
 }

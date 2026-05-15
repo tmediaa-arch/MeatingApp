@@ -7,7 +7,10 @@ namespace App\Filament\Pages;
 use App\Domains\ServiceRequests\Enums\ServiceRequestStatus;
 use App\Domains\ServiceRequests\Enums\ServiceRequestType;
 use App\Domains\ServiceRequests\Models\ServiceRequest;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Pages\Page;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
@@ -18,9 +21,9 @@ class MyServiceRequestsPage extends Page implements HasTable
 {
     use InteractsWithTable;
 
-    protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-check';
-    protected static string $view = 'filament.pages.my-service-requests';
-    protected static ?string $navigationGroup = 'درخواست‌های جانبی';
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentCheck;
+    protected string $view = 'filament.pages.my-service-requests';
+    protected static string|\UnitEnum|null $navigationGroup = 'درخواست‌های جانبی';
     protected static ?int $navigationSort = 1;
 
     public static function getNavigationLabel(): string
@@ -45,15 +48,11 @@ class MyServiceRequestsPage extends Page implements HasTable
                 Tables\Columns\TextColumn::make('request_number')->label('شماره')->copyable(),
                 Tables\Columns\TextColumn::make('type')
                     ->label('نوع')
-                    ->badge()
-                    ->color(fn (ServiceRequestType $t) => $t->color())
-                    ->formatStateUsing(fn (ServiceRequestType $t) => $t->label()),
+                    ->badge(),
                 Tables\Columns\TextColumn::make('title')->label('عنوان')->limit(40),
                 Tables\Columns\TextColumn::make('status')
                     ->label('وضعیت')
-                    ->badge()
-                    ->color(fn (ServiceRequestStatus $s) => $s->color())
-                    ->formatStateUsing(fn (ServiceRequestStatus $s) => $s->label()),
+                    ->badge(),
                 Tables\Columns\TextColumn::make('required_at')
                     ->label('زمان نیاز')
                     ->dateTime('Y/m/d H:i')
@@ -67,16 +66,18 @@ class MyServiceRequestsPage extends Page implements HasTable
                     ->default(),
                 Tables\Filters\SelectFilter::make('status')
                     ->label('وضعیت')
-                    ->options(ServiceRequestStatus::options()),
+                    ->options(ServiceRequestStatus::class),
             ])
-            ->actions([
-                Tables\Actions\Action::make('view')
-                    ->label('مشاهده')
-                    ->icon('heroicon-o-eye')
-                    ->url(fn (ServiceRequest $r) => route(
-                        'filament.admin.resources.service-requests.view',
-                        ['record' => $r],
-                    )),
+            ->recordActions([
+                ActionGroup::make([
+                    Action::make('view')
+                        ->label('مشاهده')
+                        ->icon(Heroicon::OutlinedEye)
+                        ->url(fn (ServiceRequest $r) => route(
+                            'filament.admin.resources.service-requests.view',
+                            ['record' => $r],
+                        )),
+                ]),
             ]);
     }
 }

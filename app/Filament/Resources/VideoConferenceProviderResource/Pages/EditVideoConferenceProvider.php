@@ -14,10 +14,7 @@ class EditVideoConferenceProvider extends EditRecord
 {
     protected static string $resource = VideoConferenceProviderResource::class;
 
-    /**
-     * Decrypt config برای نمایش در form.
-     */
-    protected function mutateFormDataBeforeFill(array $data): array
+    protected function mutateDataBeforeFill(array $data): array
     {
         if (!empty($data['config_encrypted'])) {
             try {
@@ -30,10 +27,7 @@ class EditVideoConferenceProvider extends EditRecord
         return $data;
     }
 
-    /**
-     * Encrypt config قبل از ذخیره.
-     */
-    protected function mutateFormDataBeforeSave(array $data): array
+    protected function mutateDataBeforeSave(array $data): array
     {
         $config = $data['config'] ?? [];
         unset($data['config']);

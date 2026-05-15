@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace App\Filament\Widgets;
 
 use App\Domains\Resolutions\Models\Resolution;
+use Filament\Actions\Action;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -33,8 +34,8 @@ class MyVotingPendingWidget extends BaseWidget
                     ->label('پیشرفت')
                     ->state(fn ($r) => "{$r->voters_total} رأی"),
             ])
-            ->actions([
-                Tables\Actions\Action::make('view')
+            ->recordActions([
+                Action::make('view')
                     ->label('مشاهده و رأی')
                     ->color('primary')
                     ->url(fn ($record) => route('filament.admin.resources.resolutions.view', $record)),

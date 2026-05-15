@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace App\Domains\Minutes\Enums;
 
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasIcon;
+use Filament\Support\Contracts\HasLabel;
+
 /**
  * چرخه عمر صورتجلسه.
  *
@@ -14,7 +18,7 @@ namespace App\Domains\Minutes\Enums;
  * revoked   → ابطال شد (نیاز به مجوز ویژه)
  * archived  → بایگانی شد
  */
-enum MinuteStatus: string
+enum MinuteStatus: string implements HasColor, HasIcon, HasLabel
 {
     case Draft = 'draft';
     case Review = 'review';
@@ -94,5 +98,20 @@ enum MinuteStatus: string
         return collect(self::cases())
             ->mapWithKeys(fn (self $s) => [$s->value => $s->label()])
             ->toArray();
+    }
+
+    public function getLabel(): string
+    {
+        return $this->label();
+    }
+
+    public function getColor(): string|array|null
+    {
+        return $this->color();
+    }
+
+    public function getIcon(): string|\BackedEnum|\Illuminate\Contracts\Support\Htmlable|null
+    {
+        return $this->icon();
     }
 }

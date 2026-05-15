@@ -1,10 +1,14 @@
 <?php
+
 declare(strict_types=1);
+
 namespace App\Filament\Resources\TaskResource\RelationManagers;
 
 use App\Domains\Tasks\Actions\ReviewExtensionAction;
+use Filament\Actions\Action;
 use Filament\Forms;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
 use Filament\Tables\Table;
 
@@ -31,13 +35,13 @@ class ExtensionsRelationManager extends RelationManager
                     }),
                 Tables\Columns\TextColumn::make('reviewer.name')->label('بررسی‌کننده'),
             ])
-            ->actions([
-                Tables\Actions\Action::make('approve')
+            ->recordActions([
+                Action::make('approve')
                     ->label('تأیید')
                     ->color('success')
-                    ->icon('heroicon-o-check')
+                    ->icon(Heroicon::OutlinedCheck)
                     ->visible(fn ($record) => $record->isPending())
-                    ->form([
+                    ->schema([
                         Forms\Components\Textarea::make('note')->label('یادداشت')->rows(2),
                     ])
                     ->action(function ($record, array $data) {
@@ -45,12 +49,12 @@ class ExtensionsRelationManager extends RelationManager
                             $record, auth()->user(), true, $data['note'] ?? null,
                         );
                     }),
-                Tables\Actions\Action::make('reject')
+                Action::make('reject')
                     ->label('رد')
                     ->color('danger')
-                    ->icon('heroicon-o-x-mark')
+                    ->icon(Heroicon::OutlinedXMark)
                     ->visible(fn ($record) => $record->isPending())
-                    ->form([
+                    ->schema([
                         Forms\Components\Textarea::make('note')->label('علت رد')->required()->rows(2),
                     ])
                     ->action(function ($record, array $data) {

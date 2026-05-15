@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Domains\Integrations\Enums;
 
-enum IntegrationType: string
+use Filament\Support\Contracts\HasIcon;
+use Filament\Support\Contracts\HasLabel;
+
+enum IntegrationType: string implements HasIcon, HasLabel
 {
     case Ldap = 'ldap';
     case SamlSso = 'saml_sso';
@@ -37,5 +40,15 @@ enum IntegrationType: string
     public function supportsSync(): bool
     {
         return in_array($this, [self::Ldap, self::Hrs], true);
+    }
+
+    public function getLabel(): string
+    {
+        return $this->label();
+    }
+
+    public function getIcon(): string|\BackedEnum|\Illuminate\Contracts\Support\Htmlable|null
+    {
+        return $this->icon();
     }
 }

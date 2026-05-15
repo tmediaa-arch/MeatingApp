@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace App\Domains\ServiceRequests\Enums;
 
-enum ServiceRequestType: string
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasIcon;
+use Filament\Support\Contracts\HasLabel;
+
+enum ServiceRequestType: string implements HasColor, HasIcon, HasLabel
 {
     case Transport = 'transport';
     case Catering = 'catering';
@@ -89,5 +93,20 @@ enum ServiceRequestType: string
         return collect(self::cases())
             ->mapWithKeys(fn ($t) => [$t->value => $t->label()])
             ->toArray();
+    }
+
+    public function getLabel(): string
+    {
+        return $this->label();
+    }
+
+    public function getColor(): string|array|null
+    {
+        return $this->color();
+    }
+
+    public function getIcon(): string|\BackedEnum|\Illuminate\Contracts\Support\Htmlable|null
+    {
+        return $this->icon();
     }
 }

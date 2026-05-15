@@ -9,9 +9,12 @@ use App\Domains\ServiceRequests\Actions\RejectServiceRequestAction;
 use App\Domains\ServiceRequests\Enums\ServiceRequestStatus;
 use App\Domains\ServiceRequests\Enums\ServiceRequestType;
 use App\Domains\ServiceRequests\Models\ServiceRequest;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
@@ -21,9 +24,9 @@ class ServiceRequestReviewPage extends Page implements HasTable
 {
     use InteractsWithTable;
 
-    protected static ?string $navigationIcon = 'heroicon-o-magnifying-glass-circle';
-    protected static string $view = 'filament.pages.service-request-review';
-    protected static ?string $navigationGroup = 'درخواست‌های جانبی';
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedMagnifyingGlassCircle;
+    protected string $view = 'filament.pages.service-request-review';
+    protected static string|\UnitEnum|null $navigationGroup = 'درخواست‌های جانبی';
     protected static ?int $navigationSort = 5;
 
     public static function getNavigationLabel(): string
@@ -54,9 +57,7 @@ class ServiceRequestReviewPage extends Page implements HasTable
                 Tables\Columns\TextColumn::make('request_number')->label('شماره'),
                 Tables\Columns\TextColumn::make('type')
                     ->label('نوع')
-                    ->badge()
-                    ->color(fn (ServiceRequestType $t) => $t->color())
-                    ->formatStateUsing(fn (ServiceRequestType $t) => $t->label()),
+                    ->badge(),
                 Tables\Columns\TextColumn::make('title')->label('عنوان')->limit(50),
                 Tables\Columns\TextColumn::make('priority')
                     ->label('اولویت')
@@ -74,34 +75,36 @@ class ServiceRequestReviewPage extends Page implements HasTable
                 Tables\Columns\TextColumn::make('requester.name')->label('درخواست‌کننده'),
                 Tables\Columns\TextColumn::make('estimated_cost')->label('هزینه')->money('IRR', divideBy: 1),
             ])
-            ->actions([
-                Tables\Actions\Action::make('approve')
-                    ->label('تأیید')
-                    ->color('success')
-                    ->icon('heroicon-o-check-circle')
-                    ->form([Forms\Components\Textarea::make('comment')->label('یادداشت')])
-                    ->action(function (ServiceRequest $r, array $data) {
-                        app(ApproveServiceRequestAction::class)->execute($r, auth()->user(), $data['comment'] ?? null);
-                        Notification::make()->title('تأیید شد')->success()->send();
-                    }),
+            ->recordActions([
+                ActionGroup::make([
+                    Action::make('approve')
+                        ->label('تأیید')
+                        ->color('success')
+                        ->icon(Heroicon::OutlinedCheckCircle)
+                        ->schema([Forms\Components\Textarea::make('comment')->label('یادداشت')])
+                        ->action(function (ServiceRequest $r, array $data) {
+                            app(ApproveServiceRequestAction::class)->execute($r, auth()->user(), $data['comment'] ?? null);
+                            Notification::make()->title('تأیید شد')->success()->send();
+                        }),
 
-                Tables\Actions\Action::make('reject')
-                    ->label('رد')
-                    ->color('danger')
-                    ->icon('heroicon-o-x-circle')
-                    ->form([Forms\Components\Textarea::make('reason')->label('دلیل')->required()])
-                    ->action(function (ServiceRequest $r, array $data) {
-                        app(RejectServiceRequestAction::class)->execute($r, auth()->user(), $data['reason']);
-                        Notification::make()->title('رد شد')->warning()->send();
-                    }),
+                    Action::make('reject')
+                        ->label('رد')
+                        ->color('danger')
+                        ->icon(Heroicon::OutlinedXCircle)
+                        ->schema([Forms\Components\Textarea::make('reason')->label('دلیل')->required()])
+                        ->action(function (ServiceRequest $r, array $data) {
+                            app(RejectServiceRequestAction::class)->execute($r, auth()->user(), $data['reason']);
+                            Notification::make()->title('رد شد')->warning()->send();
+                        }),
 
-                Tables\Actions\Action::make('view')
-                    ->label('مشاهده')
-                    ->icon('heroicon-o-eye')
-                    ->url(fn (ServiceRequest $r) => route(
-                        'filament.admin.resources.service-requests.view',
-                        ['record' => $r],
-                    )),
+                    Action::make('view')
+                        ->label('مشاهده')
+                        ->icon(Heroicon::OutlinedEye)
+                        ->url(fn (ServiceRequest $r) => route(
+                            'filament.admin.resources.service-requests.view',
+                            ['record' => $r],
+                        )),
+                ]),
             ]);
     }
 }

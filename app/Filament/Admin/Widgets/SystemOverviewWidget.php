@@ -12,6 +12,7 @@ use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Models\UserDelegation;
 use App\Domains\Organization\Models\Employee;
 use App\Domains\Organization\Models\OrgUnit;
+use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -52,32 +53,32 @@ class SystemOverviewWidget extends BaseWidget
         return [
             Stat::make('کاربران فعال', $activeUsers)
                 ->description("از مجموع {$totalUsers} کاربر")
-                ->descriptionIcon('heroicon-m-users')
+                ->descriptionIcon(Heroicon::MiniUsers)
                 ->color('success'),
 
             Stat::make('واحدهای سازمانی', $totalUnits)
                 ->description("{$totalEmployees} کارمند فعال")
-                ->descriptionIcon('heroicon-m-building-office-2')
+                ->descriptionIcon(Heroicon::MiniBuildingOffice2)
                 ->color('info'),
 
             Stat::make('تفویض‌های فعال', $activeDelegations)
                 ->description('تفویض اختیار جاری')
-                ->descriptionIcon('heroicon-m-arrow-uturn-right')
+                ->descriptionIcon(Heroicon::MiniArrowUturnRight)
                 ->color('warning'),
 
             Stat::make('کاربران قفل', $lockedUsers)
                 ->description($lockedUsers > 0 ? 'نیاز به بررسی' : 'وضعیت طبیعی')
-                ->descriptionIcon('heroicon-m-lock-closed')
+                ->descriptionIcon(Heroicon::MiniLockClosed)
                 ->color($lockedUsers > 0 ? 'danger' : 'gray'),
 
             Stat::make('رویدادهای امنیتی نشده', $unreviewedSecurityEvents)
                 ->description($unreviewedSecurityEvents > 0 ? 'نیاز به بررسی' : 'بدون رویداد')
-                ->descriptionIcon('heroicon-m-exclamation-triangle')
+                ->descriptionIcon(Heroicon::MiniExclamationTriangle)
                 ->color($unreviewedSecurityEvents > 0 ? 'danger' : 'success'),
 
             Stat::make('تلاش ناموفق ۲۴ ساعت', $failedLoginsLast24h)
                 ->description('Login های ناموفق')
-                ->descriptionIcon('heroicon-m-shield-exclamation')
+                ->descriptionIcon(Heroicon::MiniShieldExclamation)
                 ->color($failedLoginsLast24h > 50 ? 'danger' : ($failedLoginsLast24h > 10 ? 'warning' : 'gray')),
         ];
     }

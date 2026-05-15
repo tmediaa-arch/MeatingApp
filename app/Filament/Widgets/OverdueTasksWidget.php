@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Widgets;
 
 use App\Domains\Tasks\Services\TaskEscalationService;
+use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -21,7 +22,7 @@ class OverdueTasksWidget extends StatsOverviewWidget
         return [
             Stat::make('کل وظایف تأخیردار', $stats['total_overdue'])
                 ->description($stats['total_overdue'] > 0 ? 'نیاز به پیگیری' : 'هیچ تأخیر فعالی نیست')
-                ->descriptionIcon('heroicon-m-exclamation-triangle')
+                ->descriptionIcon(Heroicon::MiniExclamationTriangle)
                 ->color($stats['total_overdue'] > 0 ? 'danger' : 'success'),
 
             Stat::make('سطح 1 (Supervisor)', $stats['level_1'])

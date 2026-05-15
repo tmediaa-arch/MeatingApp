@@ -6,11 +6,26 @@ namespace App\Filament\Resources;
 
 use App\Domains\Files\Models\File;
 use App\Domains\Shared\Enums\ConfidentialityLevel;
+use App\Filament\Admin\Schemas\FormLayout;
 use App\Filament\Resources\FileResource\Pages;
-use Filament\Forms;
-use Filament\Forms\Form;
+use Ariaieboy\Jalali\Forms\Components\JalaliDateTimePicker;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TagsInput;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -18,47 +33,58 @@ class FileResource extends Resource
 {
     protected static ?string $model = File::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-folder';
-    protected static ?string $navigationGroup = 'مدیریت پس از جلسه';
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedFolder;
+    protected static string|\UnitEnum|null $navigationGroup = 'مدیریت پس از جلسه';
     protected static ?string $navigationLabel = 'فایل‌ها';
     protected static ?string $modelLabel = 'فایل';
     protected static ?string $pluralModelLabel = 'فایل‌ها';
+    protected static ?string $recordTitleAttribute = 'title';
     protected static ?int $navigationSort = 50;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form->schema([
-            Forms\Components\Section::make('مشخصات فایل')
-                ->columns(2)
-                ->schema([
-                    Forms\Components\TextInput::make('title')
-                        ->label('عنوان')
-                        ->required()
-                        ->maxLength(500)
-                        ->columnSpanFull(),
-                    Forms\Components\Textarea::make('description')
-                        ->label('توضیحات')
-                        ->rows(2)
-                        ->columnSpanFull(),
-                    Forms\Components\FileUpload::make('storage_path')
-                        ->label('فایل')
-                        ->disk('local')
-                        ->directory('files')
-                        ->visibility('private')
-                        ->required()
-                        ->columnSpanFull(),
-                    Forms\Components\Select::make('confidentiality_level')
-                        ->label('سطح محرمانگی')
-                        ->options(ConfidentialityLevel::class)
-                        ->required()
-                        ->default('internal'),
-                    Forms\Components\DateTimePicker::make('expires_at')
-                        ->label('تاریخ انقضا'),
-                    Forms\Components\TagsInput::make('tags')
-                        ->label('تگ‌ها')
-                        ->columnSpanFull(),
-                ]),
-        ]);
+        return $schema->components(FormLayout::withSidebar(
+            main: [
+                Section::make('مشخصات فایل')
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('title')
+                            ->label('عنوان')
+                            ->required()
+                            ->maxLength(500)
+                            ->columnSpanFull(),
+                        Textarea::make('description')
+                            ->label('توضیحات')
+                            ->rows(2)
+                            ->columnSpanFull(),
+                        FileUpload::make('storage_path')
+                            ->label('فایل')
+                            ->disk('local')
+                            ->directory('files')
+                            ->visibility('private')
+                            ->required()
+                            ->columnSpanFull(),
+                    ]),
+            ],
+            sidebar: [
+                Section::make('دسترسی و انقضا')
+                    ->schema([
+                        Select::make('confidentiality_level')
+                            ->label('سطح محرمانگی')
+                            ->options(ConfidentialityLevel::class)
+                            ->required()
+                            ->default('internal'),
+                        JalaliDateTimePicker::make('expires_at')
+                            ->label('تاریخ انقضا'),
+                    ]),
+                Section::make('برچسب‌ها')
+                    ->collapsed()
+                    ->schema([
+                        TagsInput::make('tags')
+                            ->label('تگ‌ها'),
+                    ]),
+            ],
+        ));
     }
 
     public static function table(Table $table): Table
@@ -66,12 +92,12 @@ class FileResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\IconColumn::make('icon')
-                    ->label('')
+                    ->hiddenLabel()
                     ->state(fn ($r) => match (true) {
-                        str_contains($r->mime_type ?? '', 'pdf') => 'heroicon-o-document',
-                        str_contains($r->mime_type ?? '', 'image') => 'heroicon-o-photo',
-                        str_contains($r->mime_type ?? '', 'video') => 'heroicon-o-film',
-                        default => 'heroicon-o-document-text',
+                        str_contains($r->mime_type ?? '', 'pdf') => Heroicon::OutlinedDocument,
+                        str_contains($r->mime_type ?? '', 'image') => Heroicon::OutlinedPhoto,
+                        str_contains($r->mime_type ?? '', 'video') => Heroicon::OutlinedFilm,
+                        default => Heroicon::OutlinedDocumentText,
                     })
                     ->color('gray'),
                 Tables\Columns\TextColumn::make('title')->label('عنوان')->searchable()->limit(40),
@@ -94,10 +120,10 @@ class FileResource extends Resource
                 Tables\Columns\TextColumn::make('uploaded_at')->label('زمان')->dateTime('Y/m/d H:i'),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('confidentiality_level')
+                SelectFilter::make('confidentiality_level')
                     ->label('محرمانگی')
                     ->options(ConfidentialityLevel::class),
-                Tables\Filters\SelectFilter::make('virus_scan_status')
+                SelectFilter::make('virus_scan_status')
                     ->label('اسکن')
                     ->options([
                         'pending' => 'در انتظار',
@@ -106,25 +132,32 @@ class FileResource extends Resource
                         'failed' => 'ناموفق',
                     ]),
             ])
-            ->actions([
-                Tables\Actions\Action::make('download')
-                    ->label('دانلود')
-                    ->icon('heroicon-o-arrow-down-tray')
-                    ->visible(fn (File $r) => auth()->user()->can('download', $r))
-                    ->action(function (File $r) {
-                        return response()->download(
-                            storage_path('app/' . $r->storage_path),
-                            $r->file_name,
-                        );
-                    }),
-                Tables\Actions\DeleteAction::make(),
+            ->recordActions([
+                ActionGroup::make([
+                    EditAction::make(),
+                    Action::make('download')
+                        ->label('دانلود')
+                        ->icon(Heroicon::OutlinedArrowDownTray)
+                        ->visible(fn (File $r) => auth()->user()->can('download', $r))
+                        ->action(function (File $r) {
+                            return response()->download(
+                                storage_path('app/' . $r->storage_path),
+                                $r->file_name,
+                            );
+                        }),
+                    DeleteAction::make(),
+                ]),
+            ])
+            ->groupedBulkActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
             ])
             ->defaultSort('uploaded_at', 'desc');
     }
 
     public static function getEloquentQuery(): Builder
     {
-        // فقط فایل‌هایی که کاربر قابلیت دیدنشان را دارد
         $user = auth()->user();
         return parent::getEloquentQuery()
             ->where(function ($q) use ($user) {

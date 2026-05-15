@@ -13,18 +13,21 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\DB;
 
 class NotificationPreferencesPage extends Page implements HasForms
 {
     use InteractsWithForms;
 
-    protected static ?string $navigationIcon = 'heroicon-o-bell-snooze';
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedBellSnooze;
     protected static ?string $navigationLabel = 'تنظیمات اعلان من';
     protected static ?string $title = 'تنظیمات اعلان من';
     protected static ?int $navigationSort = 90;
 
-    protected static string $view = 'filament.pages.notification-preferences';
+    protected string $view = 'filament.pages.notification-preferences';
 
     public ?array $data = [];
 
@@ -67,11 +70,11 @@ class NotificationPreferencesPage extends Page implements HasForms
         $this->form->fill($this->data);
     }
 
-    public function form(Forms\Form $form): Forms\Form
+    public function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\Section::make('ساعات سکوت')
+        return $schema
+            ->components([
+                Section::make('ساعات سکوت')
                     ->description('در این ساعات اعلان‌های غیر بحرانی به بعد موکول می‌شوند.')
                     ->columns(3)
                     ->schema([
@@ -80,11 +83,10 @@ class NotificationPreferencesPage extends Page implements HasForms
                         TimePicker::make('quiet_hours_end')->label('تا'),
                     ]),
 
-                Forms\Components\Section::make('کانال‌های اعلان به ازای هر نوع')
+                Section::make('کانال‌های اعلان به ازای هر نوع')
                     ->schema([
                         Forms\Components\Placeholder::make('info')
                             ->content('برای هر نوع اعلان مشخص کنید از طریق چه کانال‌هایی می‌خواهید دریافت کنید.'),
-                        // در view به‌صورت دستی render می‌کنیم
                     ]),
             ])
             ->statePath('data');
@@ -95,7 +97,6 @@ class NotificationPreferencesPage extends Page implements HasForms
         $user = auth()->user();
 
         DB::transaction(function () use ($user) {
-            // ذخیره quiet hours روی رکورد عمومی
             NotificationPreference::updateOrCreate(
                 ['user_id' => $user->id, 'template_key' => null],
                 [
@@ -105,7 +106,6 @@ class NotificationPreferencesPage extends Page implements HasForms
                 ],
             );
 
-            // برای هر template، channelهای فعال را ذخیره کن
             foreach ($this->data['preferences'] ?? [] as $row) {
                 $enabled = [];
                 foreach (NotificationChannel::cases() as $ch) {
