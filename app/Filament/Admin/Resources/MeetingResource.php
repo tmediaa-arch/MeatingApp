@@ -20,7 +20,6 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
@@ -249,8 +248,25 @@ class MeetingResource extends Resource
                     ->schema([
                         TagsInput::make('tags')
                             ->label('برچسب‌ها'),
-                        KeyValue::make('metadata')
-                            ->label('فیلدهای اضافه'),
+                        Repeater::make('metadata')
+                            ->label('فیلدهای اضافه')
+                            ->schema([
+                                TextInput::make('key')->label('کلید')->required(),
+                                TextInput::make('value')->label('مقدار'),
+                            ])
+                            ->columns(2)
+                            ->addActionLabel('افزودن فیلد')
+                            ->formatStateUsing(fn ($state) => collect(is_array($state) ? $state : [])
+                                ->map(fn ($v, $k) => [
+                                    'key' => $k,
+                                    'value' => is_scalar($v) ? $v : json_encode($v, JSON_UNESCAPED_UNICODE),
+                                ])
+                                ->values()
+                                ->all())
+                            ->dehydrateStateUsing(fn ($state) => collect(is_array($state) ? $state : [])
+                                ->filter(fn ($row) => filled($row['key'] ?? null))
+                                ->mapWithKeys(fn ($row) => [$row['key'] => $row['value'] ?? null])
+                                ->all()),
                     ]),
             ],
         ));
