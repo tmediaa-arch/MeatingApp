@@ -24,7 +24,7 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
  */
 class SystemOverviewWidget extends BaseWidget
 {
-    protected static ?string $pollingInterval = '60s';
+    protected ?string $pollingInterval = '60s';
 
     protected function getStats(): array
     {
