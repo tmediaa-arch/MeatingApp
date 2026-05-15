@@ -7,18 +7,18 @@ namespace App\Filament\Resources\UserTaskResource\Pages;
 use App\Domains\Workflow\Enums\UserTaskStatus;
 use App\Filament\Resources\UserTaskResource;
 use Filament\Infolists\Components\KeyValueEntry;
-use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Infolist;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 
 class ViewUserTask extends ViewRecord
 {
     protected static string $resource = UserTaskResource::class;
 
-    public function infolist(Infolist $infolist): Infolist
+    public function infolist(Schema $schema): Schema
     {
-        return $infolist->schema([
+        return $schema->components([
             Section::make('UserTask')->schema([
                 TextEntry::make('name')->label('عنوان'),
                 TextEntry::make('description')->label('شرح'),
