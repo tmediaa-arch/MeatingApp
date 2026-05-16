@@ -11,6 +11,9 @@
     --font-mono: 'Vazirmatn', ui-monospace, monospace;
 }
 
+/* ====================================================================
+ *  Typography — Vazirmatn everywhere
+ * ==================================================================== */
 html,
 body,
 .fi-body,
@@ -33,4 +36,200 @@ body,
 .fi-ta-cell [data-numeric],
 .fi-input[type='number'] {
     font-variant-numeric: tabular-nums;
+}
+
+/* ====================================================================
+ *  FlowDash-inspired admin theme
+ *  Dark indigo sidebar · soft light content · rounded cards · violet
+ *  accent. Tokens below let you retune the palette in one place.
+ * ==================================================================== */
+:root {
+    --fd-sidebar-bg-top: #211e44;
+    --fd-sidebar-bg-bottom: #161430;
+    --fd-sidebar-text: #c9cbe6;
+    --fd-sidebar-muted: #7d7fa6;
+    --fd-sidebar-hover: rgba(255, 255, 255, 0.06);
+    --fd-accent: #6366f1;
+    --fd-content-bg: #f5f6fb;
+    --fd-card-border: #eceef4;
+    --fd-card-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.07);
+}
+
+/* -------- content background (light mode) -------- */
+html:not(.dark) .fi-main,
+html:not(.dark) .fi-main-ctn,
+html:not(.dark) .fi-page {
+    background-color: var(--fd-content-bg);
+}
+
+/* ====================================================================
+ *  Sidebar — dark indigo in both light & dark modes
+ * ==================================================================== */
+.fi-sidebar,
+.fi-sidebar-nav,
+.fi-sidebar-header {
+    background: linear-gradient(180deg, var(--fd-sidebar-bg-top) 0%, var(--fd-sidebar-bg-bottom) 100%) !important;
+    border-color: transparent !important;
+}
+
+.fi-sidebar {
+    box-shadow: 2px 0 18px rgba(15, 13, 40, 0.18);
+}
+
+/* brand area */
+.fi-sidebar-header {
+    box-shadow: none !important;
+}
+
+.fi-sidebar-header .fi-logo,
+.fi-sidebar-header a {
+    color: #ffffff !important;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+}
+
+/* nav text + icons */
+.fi-sidebar .fi-sidebar-item-label,
+.fi-sidebar .fi-sidebar-item-icon,
+.fi-sidebar .fi-sidebar-item-button,
+.fi-sidebar a,
+.fi-sidebar .fi-icon-btn {
+    color: var(--fd-sidebar-text) !important;
+}
+
+/* group labels — uppercase muted captions */
+.fi-sidebar-group-label {
+    color: var(--fd-sidebar-muted) !important;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    font-size: 0.68rem;
+    font-weight: 700;
+}
+
+/* items */
+.fi-sidebar-item-button {
+    border-radius: 0.6rem;
+    margin-inline: 0.35rem;
+    transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.fi-sidebar-item-button:hover {
+    background-color: var(--fd-sidebar-hover) !important;
+}
+
+.fi-sidebar-item-button:hover .fi-sidebar-item-label,
+.fi-sidebar-item-button:hover .fi-sidebar-item-icon {
+    color: #ffffff !important;
+}
+
+/* active item — violet pill */
+.fi-sidebar-item.fi-active > .fi-sidebar-item-button,
+.fi-sidebar-item-active > .fi-sidebar-item-button,
+.fi-sidebar-item-button[aria-current='page'] {
+    background: var(--fd-accent) !important;
+    box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+}
+
+.fi-sidebar-item.fi-active .fi-sidebar-item-label,
+.fi-sidebar-item.fi-active .fi-sidebar-item-icon,
+.fi-sidebar-item-active .fi-sidebar-item-label,
+.fi-sidebar-item-active .fi-sidebar-item-icon,
+.fi-sidebar-item-button[aria-current='page'] .fi-sidebar-item-label,
+.fi-sidebar-item-button[aria-current='page'] .fi-sidebar-item-icon {
+    color: #ffffff !important;
+}
+
+/* nested / sub items */
+.fi-sidebar-sub-group-items .fi-sidebar-item-button {
+    font-size: 0.86rem;
+}
+
+/* ====================================================================
+ *  Topbar — clean white bar
+ * ==================================================================== */
+html:not(.dark) .fi-topbar {
+    background-color: #ffffff !important;
+    border-bottom: 1px solid var(--fd-card-border);
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.03);
+}
+
+/* ====================================================================
+ *  Cards & sections — rounded, soft shadow
+ * ==================================================================== */
+.fi-section,
+.fi-wi-stats-overview-stat,
+.fi-ta-ctn {
+    border-radius: 0.9rem !important;
+}
+
+html:not(.dark) .fi-section,
+html:not(.dark) .fi-wi-stats-overview-stat {
+    background-color: #ffffff;
+    border: 1px solid var(--fd-card-border) !important;
+    box-shadow: var(--fd-card-shadow) !important;
+}
+
+/* stat widgets — subtle lift on hover */
+.fi-wi-stats-overview-stat {
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+html:not(.dark) .fi-wi-stats-overview-stat:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(16, 24, 40, 0.1) !important;
+}
+
+/* page heading a touch larger */
+.fi-header-heading {
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+/* ====================================================================
+ *  Controls — slightly rounder buttons & inputs
+ * ==================================================================== */
+.fi-btn {
+    border-radius: 0.6rem;
+}
+
+.fi-input,
+.fi-select-input,
+.fi-textarea {
+    border-radius: 0.6rem;
+}
+
+/* ====================================================================
+ *  Auth pages — violet gradient backdrop
+ * ==================================================================== */
+.fi-simple-layout {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 55%, #4f46e5 100%) !important;
+}
+
+.fi-simple-main {
+    border-radius: 1rem !important;
+    box-shadow: 0 30px 70px rgba(23, 16, 60, 0.35) !important;
+    border: 0 !important;
+}
+
+/* ====================================================================
+ *  Misc polish
+ * ==================================================================== */
+/* thin, theme-matched scrollbar inside the sidebar */
+.fi-sidebar-nav {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+
+.fi-sidebar-nav::-webkit-scrollbar {
+    width: 6px;
+}
+
+.fi-sidebar-nav::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.18);
+    border-radius: 9999px;
+}
+
+/* tables: soft header row */
+html:not(.dark) .fi-ta-header-cell {
+    background-color: #fafbfe;
 }
