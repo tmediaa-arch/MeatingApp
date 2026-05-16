@@ -261,6 +261,7 @@ class DomainServiceProvider extends ServiceProvider
         $this->registerObservers();
         $this->registerPolicies();
         $this->registerEventListeners();
+        Event::subscribe(\App\Domains\Audit\Listeners\AuthEventSubscriber::class);
         $this->registerWorkflowHandlers();
         $this->registerWorkflowServiceTasks();
         $this->registerReports();

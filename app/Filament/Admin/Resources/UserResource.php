@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources;
 
+use App\Domains\Audit\Models\LoginLog;
 use App\Domains\Identity\Actions\SuspendUserAction;
 use App\Domains\Identity\Actions\UnlockUserAction;
 use App\Domains\Identity\Enums\UserStatus;
 use App\Domains\Identity\Models\User;
+use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\DB;
 use App\Filament\Admin\Resources\UserResource\Pages;
 use App\Filament\Admin\Schemas\FormLayout;
 use Filament\Actions\Action;
@@ -268,6 +271,45 @@ class UserResource extends Resource
                         ->requiresConfirmation()
                         ->action(function (User $record, UnlockUserAction $action) {
                             $action->execute($record, 'بازکردن دستی توسط ادمین');
+                        }),
+
+                    Action::make('login_history')
+                        ->label('آخرین فعالیت‌ها')
+                        ->icon(Heroicon::OutlinedClock)
+                        ->color('gray')
+                        ->modalHeading(fn (User $record) => 'تاریخچه ورود — ' . $record->username)
+                        ->modalContent(fn (User $record) => view('filament.admin.users.login-history', [
+                            'logs' => $record->loginLogs()
+                                ->latest('performed_at')
+                                ->limit(25)
+                                ->get(),
+                        ]))
+                        ->modalSubmitAction(false)
+                        ->modalCancelActionLabel('بستن'),
+
+                    Action::make('logout_all_sessions')
+                        ->label('خروج از همه نشست‌ها')
+                        ->icon(Heroicon::OutlinedArrowLeftEndOnRectangle)
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->modalDescription('همه نشست‌های فعال این کاربر بسته می‌شود و باید دوباره وارد شود.')
+                        ->action(function (User $record) {
+                            $count = DB::table('sessions')
+                                ->where('user_id', $record->id)
+                                ->delete();
+
+                            LoginLog::query()
+                                ->where('user_id', $record->id)
+                                ->whereNull('logged_out_at')
+                                ->update([
+                                    'logged_out_at' => now(),
+                                    'logout_reason' => 'forced',
+                                ]);
+
+                            Notification::make()
+                                ->title("{$count} نشست فعال بسته شد")
+                                ->success()
+                                ->send();
                         }),
                 ]),
             ])
