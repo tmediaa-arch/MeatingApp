@@ -62,7 +62,11 @@ class MyServiceRequestsPage extends Page implements HasTable
             ->filters([
                 Tables\Filters\Filter::make('open')
                     ->label('فقط باز')
-                    ->query(fn (Builder $q) => $q->open())
+                    ->query(fn (Builder $q) => $q->whereNotIn('status', [
+                        ServiceRequestStatus::Completed->value,
+                        ServiceRequestStatus::Rejected->value,
+                        ServiceRequestStatus::Cancelled->value,
+                    ]))
                     ->default(),
                 Tables\Filters\SelectFilter::make('status')
                     ->label('وضعیت')

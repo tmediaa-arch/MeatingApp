@@ -6,8 +6,9 @@ namespace App\Filament\Admin\Resources;
 
 use App\Domains\Audit\Models\AuditLog;
 use App\Filament\Admin\Resources\AuditLogResource\Pages;
+use App\Filament\Admin\Schemas\FormLayout;
 use Filament\Actions\ViewAction;
-use Filament\Forms\Components\DatePicker;
+use App\Filament\Forms\Components\JalaliDatePicker;
 use Filament\Infolists\Components\KeyValueEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
@@ -59,45 +60,48 @@ class AuditLogResource extends Resource
 
     public static function infolist(Schema $schema): Schema
     {
-        return $schema->components([
-            Section::make('رویداد')
-                ->columns(2)
-                ->schema([
-                    TextEntry::make('event')->label('رویداد')->badge(),
-                    TextEntry::make('action_category')->label('دسته')->badge()->placeholder('—'),
-                    TextEntry::make('severity')->label('شدت')->badge()->placeholder('—'),
-                    TextEntry::make('performed_at')->label('زمان')->dateTime('Y/m/d H:i:s'),
-                    TextEntry::make('description')->label('شرح')->columnSpanFull()->placeholder('—'),
-                ]),
+        return $schema->components(FormLayout::withSidebar(
+            main: [
+                Section::make('رویداد')
+                    ->description('جزئیات کلی رویداد ثبت‌شده')
+                    ->columns(2)
+                    ->schema([
+                        TextEntry::make('event')->label('رویداد')->badge(),
+                        TextEntry::make('action_category')->label('دسته')->badge()->placeholder('—'),
+                        TextEntry::make('severity')->label('شدت')->badge()->placeholder('—'),
+                        TextEntry::make('performed_at')->label('زمان')->dateTime('Y/m/d H:i:s'),
+                        TextEntry::make('description')->label('شرح')->columnSpanFull()->placeholder('—'),
+                    ]),
 
-            Section::make('کاربر')
-                ->columns(2)
-                ->schema([
-                    TextEntry::make('user_display_name')->label('کاربر')->placeholder('—'),
-                    TextEntry::make('user_id')->label('شناسه کاربر')->placeholder('—'),
-                    TextEntry::make('ip_address')->label('IP')->placeholder('—'),
-                    TextEntry::make('request_method')->label('متد درخواست')->placeholder('—'),
-                    TextEntry::make('request_url')->label('آدرس درخواست')->columnSpanFull()->placeholder('—'),
-                    TextEntry::make('user_agent')->label('User Agent')->columnSpanFull()->placeholder('—'),
-                ]),
+                Section::make('تغییرات')
+                    ->description('مقادیر قبل و بعد از تغییر')
+                    ->collapsible()
+                    ->schema([
+                        KeyValueEntry::make('old_values')->label('مقادیر قبلی')->columnSpanFull(),
+                        KeyValueEntry::make('new_values')->label('مقادیر جدید')->columnSpanFull(),
+                        KeyValueEntry::make('context')->label('زمینه')->columnSpanFull(),
+                    ]),
+            ],
+            sidebar: [
+                Section::make('کاربر')
+                    ->schema([
+                        TextEntry::make('user_display_name')->label('کاربر')->placeholder('—'),
+                        TextEntry::make('user_id')->label('شناسه کاربر')->placeholder('—'),
+                        TextEntry::make('ip_address')->label('IP')->placeholder('—'),
+                        TextEntry::make('request_method')->label('متد درخواست')->placeholder('—'),
+                        TextEntry::make('request_url')->label('آدرس درخواست')->placeholder('—'),
+                        TextEntry::make('user_agent')->label('User Agent')->placeholder('—'),
+                    ]),
 
-            Section::make('موجودیت مرتبط')
-                ->columns(2)
-                ->schema([
-                    TextEntry::make('auditable_type')->label('نوع')->placeholder('—'),
-                    TextEntry::make('auditable_id')->label('شناسه')->placeholder('—'),
-                    TextEntry::make('tag')->label('برچسب')->placeholder('—'),
-                    TextEntry::make('correlation_id')->label('Correlation ID')->placeholder('—'),
-                ]),
-
-            Section::make('تغییرات')
-                ->collapsible()
-                ->schema([
-                    KeyValueEntry::make('old_values')->label('مقادیر قبلی'),
-                    KeyValueEntry::make('new_values')->label('مقادیر جدید'),
-                    KeyValueEntry::make('context')->label('زمینه'),
-                ]),
-        ]);
+                Section::make('موجودیت مرتبط')
+                    ->schema([
+                        TextEntry::make('auditable_type')->label('نوع')->placeholder('—'),
+                        TextEntry::make('auditable_id')->label('شناسه')->placeholder('—'),
+                        TextEntry::make('tag')->label('برچسب')->placeholder('—'),
+                        TextEntry::make('correlation_id')->label('Correlation ID')->placeholder('—'),
+                    ]),
+            ],
+        ));
     }
 
     public static function table(Table $table): Table
@@ -182,8 +186,8 @@ class AuditLogResource extends Resource
 
                 Filter::make('performed_at')
                     ->schema([
-                        DatePicker::make('from')->label('از'),
-                        DatePicker::make('until')->label('تا'),
+                        JalaliDatePicker::make('from')->label('از'),
+                        JalaliDatePicker::make('until')->label('تا'),
                     ])
                     ->query(function ($query, array $data) {
                         return $query

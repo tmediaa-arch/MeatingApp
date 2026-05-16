@@ -84,8 +84,8 @@ class RunReport extends Page implements HasForms
             $default = $meta['default'] ?? null;
 
             $component = match ($type) {
-                'date' => Forms\Components\DatePicker::make($key),
-                'datetime' => Forms\Components\DateTimePicker::make($key),
+                'date' => \App\Filament\Forms\Components\JalaliDatePicker::make($key),
+                'datetime' => \App\Filament\Forms\Components\JalaliDatePicker::make($key)->dateTime(),
                 'number' => Forms\Components\TextInput::make($key)->numeric(),
                 'select' => Forms\Components\Select::make($key)
                     ->options(collect($meta['options'] ?? [])->mapWithKeys(fn ($o) => [$o => $o])),

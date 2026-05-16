@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Admin\Resources;
 
 use App\Domains\Audit\Models\LoginLog;
-use Filament\Forms\Components\DatePicker;
+use App\Filament\Forms\Components\JalaliDatePicker;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
@@ -112,8 +112,8 @@ class LoginLogResource extends Resource
 
                 Filter::make('performed_at')
                     ->schema([
-                        DatePicker::make('from')->label('از'),
-                        DatePicker::make('until')->label('تا'),
+                        JalaliDatePicker::make('from')->label('از'),
+                        JalaliDatePicker::make('until')->label('تا'),
                     ])
                     ->query(function ($query, array $data) {
                         return $query

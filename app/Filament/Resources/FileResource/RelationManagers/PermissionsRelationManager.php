@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\FileResource\RelationManagers;
 
-use Filament\Forms\Components\DateTimePicker;
+use App\Filament\Forms\Components\JalaliDatePicker;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
@@ -24,7 +24,7 @@ class PermissionsRelationManager extends RelationManager
             Toggle::make('can_download')->label('دانلود')->default(true),
             Toggle::make('can_share')->label('اشتراک‌گذاری'),
             Toggle::make('can_delete')->label('حذف'),
-            DateTimePicker::make('expires_at')->label('انقضا'),
+            JalaliDatePicker::make('expires_at')->label('انقضا')->dateTime(),
         ]);
     }
 

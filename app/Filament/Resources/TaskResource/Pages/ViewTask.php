@@ -13,7 +13,7 @@ use App\Domains\Tasks\Actions\TransitionTaskStatusAction;
 use App\Domains\Tasks\Actions\UpdateTaskProgressAction;
 use App\Domains\Tasks\Enums\TaskStatus;
 use App\Filament\Resources\TaskResource;
-use Filament\Forms\Components\DatePicker;
+use App\Filament\Forms\Components\JalaliDatePicker;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Notifications\Notification;
@@ -153,10 +153,10 @@ class ViewTask extends ViewRecord
                 ->color('warning')
                 ->visible(fn () => auth()->user()->can('requestExtension', $this->record))
                 ->schema([
-                    DatePicker::make('new_due_date')
+                    JalaliDatePicker::make('new_due_date')
                         ->label('مهلت جدید')
                         ->required()
-                        ->after('today'),
+                        ->jalaliAfter('today'),
                     Forms\Components\Textarea::make('reason')->label('دلیل')->rows(3)->required(),
                 ])
                 ->action(function (array $data) {

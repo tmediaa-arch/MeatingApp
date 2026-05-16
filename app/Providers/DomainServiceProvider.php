@@ -261,6 +261,8 @@ class DomainServiceProvider extends ServiceProvider
         $this->registerObservers();
         $this->registerPolicies();
         $this->registerEventListeners();
+        $this->registerTableDefaults();
+        Event::subscribe(\App\Domains\Audit\Listeners\AuthEventSubscriber::class);
         $this->registerWorkflowHandlers();
         $this->registerWorkflowServiceTasks();
         $this->registerReports();
@@ -448,6 +450,23 @@ class DomainServiceProvider extends ServiceProvider
                 Event::listen($event, $listener);
             }
         }
+    }
+
+    /**
+     * پیش‌فرض مشترک برای همه جدول‌های Filament — پیام «خالی بودن» فارسی.
+     *
+     * این صرفاً پیش‌فرض است؛ هر جدول می‌تواند در متد table() خود آن را
+     * بازنویسی کند و دکمه «ایجاد» همچنان به‌صورت خودکار توسط Filament در
+     * empty state نمایش داده می‌شود.
+     */
+    private function registerTableDefaults(): void
+    {
+        \Filament\Tables\Table::configureUsing(function (\Filament\Tables\Table $table): void {
+            $table
+                ->emptyStateHeading('موردی برای نمایش وجود ندارد')
+                ->emptyStateDescription('هنوز رکوردی در این فهرست ثبت نشده است؛ برای افزودن مورد جدید از دکمه‌های موجود استفاده کنید.')
+                ->emptyStateIcon(\Filament\Support\Icons\Heroicon::OutlinedInbox);
+        });
     }
 
     /**

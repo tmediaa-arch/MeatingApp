@@ -8,7 +8,7 @@ use App\Domains\Identity\Actions\RevokeDelegationAction;
 use App\Domains\Identity\Models\UserDelegation;
 use App\Filament\Admin\Resources\DelegationResource\Pages;
 use App\Filament\Admin\Schemas\FormLayout;
-use Filament\Forms\Components\DateTimePicker;
+use App\Filament\Forms\Components\JalaliDatePicker;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\EditAction;
@@ -53,7 +53,7 @@ class DelegationResource extends Resource
                         Select::make('delegator_user_id')
                             ->label('تفویض‌کننده')
                             ->relationship('delegator', 'username')
-                            ->getOptionLabelFromRecordUsing(fn ($r) => $r->resolved_display_name . ' (' . $r->username . ')')
+                            ->getOptionLabelFromRecordUsing(fn ($r) => $r ? trim(($r->resolved_display_name ?? '') . ' (' . $r->username . ')') : '')
                             ->searchable(['username', 'first_name', 'last_name'])
                             ->preload()
                             ->required(),
@@ -61,7 +61,7 @@ class DelegationResource extends Resource
                         Select::make('delegate_user_id')
                             ->label('کاربر نماینده')
                             ->relationship('delegate', 'username')
-                            ->getOptionLabelFromRecordUsing(fn ($r) => $r->resolved_display_name . ' (' . $r->username . ')')
+                            ->getOptionLabelFromRecordUsing(fn ($r) => $r ? trim(($r->resolved_display_name ?? '') . ' (' . $r->username . ')') : '')
                             ->searchable(['username', 'first_name', 'last_name'])
                             ->preload()
                             ->required()
@@ -96,14 +96,15 @@ class DelegationResource extends Resource
                             ])
                             ->default('pending'),
 
-                        DateTimePicker::make('starts_at')
+                        JalaliDatePicker::make('starts_at')
                             ->label('شروع')
+                            ->dateTime()
                             ->required(),
 
-                        DateTimePicker::make('ends_at')
+                        JalaliDatePicker::make('ends_at')
                             ->label('پایان')
-                            ->required()
-                            ->after('starts_at'),
+                            ->dateTime()
+                            ->required(),
                     ]),
 
                 Section::make('توضیحات')

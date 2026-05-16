@@ -2,7 +2,8 @@
     <div class="space-y-4">
         {{ $this->form }}
 
-        <div class="rounded-lg border border-gray-200 bg-white dark:bg-gray-900 p-2"
+        <div id="bpmn-designer-shell"
+             class="rounded-lg border border-gray-200 bg-white dark:bg-gray-900 p-2"
              wire:ignore
              x-data="bpmnDesigner(@js($this->getServiceTasksJson()))"
              x-init="initModeler()">
@@ -21,14 +22,17 @@
                         class="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600">ذخیره در فرم</button>
                 <button type="button" @click="autoColor()"
                         class="px-3 py-1 text-xs bg-amber-500 text-white rounded hover:bg-amber-600">رنگ‌آمیزی خودکار</button>
+                <button type="button" @click="toggleFullscreen()"
+                        class="px-3 py-1 text-xs bg-slate-700 text-white rounded hover:bg-slate-800"
+                        x-text="isFullscreen ? 'خروج از تمام‌صفحه' : 'نمایش تمام‌صفحه'"></button>
             </div>
 
             <div class="flex gap-2" style="min-height: 650px;">
                 {{-- بوم طراحی --}}
-                <div id="bpmn-modeler-canvas" class="flex-1" style="height: 650px; background: white; border:1px solid #e5e7eb; border-radius:6px;"></div>
+                <div id="bpmn-modeler-canvas" style="width: 70%; height: 650px; background: white; border:1px solid #e5e7eb; border-radius:6px;"></div>
 
                 {{-- پنل کناری --}}
-                <div class="w-72 shrink-0 space-y-3 overflow-y-auto" style="height: 650px;">
+                <div class="shrink-0 space-y-3 overflow-y-auto" style="width: 30%; height: 650px;">
                     {{-- افزودن وظیفه سرویس --}}
                     <div class="rounded border border-gray-200 dark:border-gray-700">
                         <div class="px-2 py-1.5 text-xs font-bold bg-gray-100 dark:bg-gray-800 rounded-t">
@@ -259,6 +263,7 @@
             selectedTypeLabel: '',
             isUserTask: false,
             isServiceTask: false,
+            isFullscreen: false,
             form: { name: '', assignee: '', candidateGroups: '', dueDate: '', priority: '', serviceTaskClass: '' },
 
             initModeler() {
@@ -278,7 +283,26 @@
                     }
                 });
 
+                // هماهنگ‌سازی وضعیت تمام‌صفحه و تغییر اندازه بوم
+                document.addEventListener('fullscreenchange', () => {
+                    this.isFullscreen = !!document.fullscreenElement;
+                    this.$nextTick(() => {
+                        try { this.modeler.get('canvas').resized(); } catch (e) { /* noop */ }
+                    });
+                });
+
                 this.loadDefault();
+            },
+
+            // باز/بسته کردن طراح به‌صورت تمام‌صفحه
+            toggleFullscreen() {
+                const shell = document.getElementById('bpmn-designer-shell');
+                if (! document.fullscreenElement) {
+                    (shell.requestFullscreen ? shell.requestFullscreen() : Promise.reject())
+                        .catch(() => alert('مرورگر از حالت تمام‌صفحه پشتیبانی نمی‌کند.'));
+                } else {
+                    document.exitFullscreen();
+                }
             },
 
             loadDefault() {
@@ -441,4 +465,18 @@
 <link rel="stylesheet" href="https://unpkg.com/bpmn-js@13.0.0/dist/assets/diagram-js.css">
 <link rel="stylesheet" href="https://unpkg.com/bpmn-js@13.0.0/dist/assets/bpmn-js.css">
 <link rel="stylesheet" href="https://unpkg.com/bpmn-js@13.0.0/dist/assets/bpmn-font/css/bpmn.css">
+<style>
+    /* حالت تمام‌صفحه طراح BPMN */
+    #bpmn-designer-shell:fullscreen {
+        background: white;
+        padding: 0.75rem;
+        overflow: auto;
+    }
+    #bpmn-designer-shell:fullscreen #bpmn-modeler-canvas {
+        height: calc(100vh - 5rem) !important;
+    }
+    #bpmn-designer-shell:fullscreen .flex[style*="min-height"] {
+        min-height: calc(100vh - 5rem) !important;
+    }
+</style>
 @endpush

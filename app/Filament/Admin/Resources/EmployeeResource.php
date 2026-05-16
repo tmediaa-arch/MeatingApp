@@ -7,7 +7,7 @@ namespace App\Filament\Admin\Resources;
 use App\Domains\Organization\Models\Employee;
 use App\Filament\Admin\Resources\EmployeeResource\Pages;
 use App\Filament\Admin\Schemas\FormLayout;
-use Filament\Forms\Components\DatePicker;
+use App\Filament\Forms\Components\JalaliDatePicker;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -70,7 +70,7 @@ class EmployeeResource extends Resource
                             ->label('جنسیت')
                             ->options(['male' => 'مرد', 'female' => 'زن']),
 
-                        DatePicker::make('birth_date')->label('تاریخ تولد'),
+                        JalaliDatePicker::make('birth_date')->label('تاریخ تولد'),
                     ]),
 
                 Section::make('اطلاعات استخدامی')
@@ -94,8 +94,8 @@ class EmployeeResource extends Resource
                             ->getOptionLabelFromRecordUsing(fn ($r) => $r->full_name)
                             ->searchable(),
 
-                        DatePicker::make('hire_date')->label('تاریخ استخدام'),
-                        DatePicker::make('termination_date')->label('تاریخ پایان همکاری'),
+                        JalaliDatePicker::make('hire_date')->label('تاریخ استخدام'),
+                        JalaliDatePicker::make('termination_date')->label('تاریخ پایان همکاری'),
                     ]),
 
                 Section::make('اطلاعات تماس')

@@ -12,7 +12,7 @@ use App\Domains\Shared\Enums\ConfidentialityLevel;
 use App\Filament\Admin\Resources\MeetingResource\Pages;
 use App\Filament\Admin\Resources\MeetingResource\RelationManagers;
 use App\Filament\Admin\Schemas\FormLayout;
-use Filament\Forms\Components\DateTimePicker;
+use App\Filament\Forms\Components\JalaliDatePicker;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -78,16 +78,15 @@ class MeetingResource extends Resource
                     ->description('تاریخ شمسی، ساعت و نوع تکرار')
                     ->columns(2)
                     ->schema([
-                        DateTimePicker::make('scheduled_start_at')
+                        JalaliDatePicker::make('scheduled_start_at')
                             ->label('شروع جلسه')
+                            ->dateTime()
                             ->required()
-                            ->seconds(false)
                             ->minDate(now()),
-                        DateTimePicker::make('scheduled_end_at')
+                        JalaliDatePicker::make('scheduled_end_at')
                             ->label('پایان جلسه')
-                            ->required()
-                            ->seconds(false)
-                            ->after('scheduled_start_at'),
+                            ->dateTime()
+                            ->required(),
                         Select::make('timezone')
                             ->label('منطقه زمانی')
                             ->options([
@@ -250,23 +249,10 @@ class MeetingResource extends Resource
                             ->label('برچسب‌ها'),
                         Repeater::make('metadata')
                             ->label('فیلدهای اضافه')
-                            ->schema([
-                                TextInput::make('key')->label('کلید')->required(),
+                            ->simple(
                                 TextInput::make('value')->label('مقدار'),
-                            ])
-                            ->columns(2)
-                            ->addActionLabel('افزودن فیلد')
-                            ->formatStateUsing(fn ($state) => collect(is_array($state) ? $state : [])
-                                ->map(fn ($v, $k) => [
-                                    'key' => $k,
-                                    'value' => is_scalar($v) ? $v : json_encode($v, JSON_UNESCAPED_UNICODE),
-                                ])
-                                ->values()
-                                ->all())
-                            ->dehydrateStateUsing(fn ($state) => collect(is_array($state) ? $state : [])
-                                ->filter(fn ($row) => filled($row['key'] ?? null))
-                                ->mapWithKeys(fn ($row) => [$row['key'] => $row['value'] ?? null])
-                                ->all()),
+                            )
+                            ->addActionLabel('افزودن فیلد'),
                     ]),
             ],
         ));

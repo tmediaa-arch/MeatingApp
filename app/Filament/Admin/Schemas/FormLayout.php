@@ -25,6 +25,7 @@ class FormLayout
     {
         return [
             Grid::make(self::COLUMNS)
+                ->columnSpanFull()
                 ->schema([
                     Group::make($main)->columnSpan([
                         'default' => self::COLUMNS,

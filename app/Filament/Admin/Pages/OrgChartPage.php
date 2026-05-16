@@ -6,6 +6,7 @@ namespace App\Filament\Admin\Pages;
 
 use App\Domains\Organization\Models\OrgUnit;
 use App\Domains\Organization\Models\Organization;
+use App\Filament\Admin\Resources\OrgUnitResource;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 
@@ -56,8 +57,10 @@ class OrgChartPage extends Page
                 'name' => $unit->name,
                 'code' => $unit->code,
                 'type' => $unit->type->label(),
+                'type_value' => $unit->type->value,
                 'manager' => $unit->manager?->full_name,
                 'employees_count' => $unit->employees()->count(),
+                'edit_url' => OrgUnitResource::getUrl('edit', ['record' => $unit->id]),
                 'children' => $byParent->get($unit->id, collect())
                     ->map(fn ($child) => $buildNode($child))
                     ->toArray(),
