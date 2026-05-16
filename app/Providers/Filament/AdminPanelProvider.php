@@ -28,7 +28,8 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login(Login::class)
             ->colors([
-                'primary' => Color::Blue,
+                'primary' => Color::Indigo,
+                'gray' => Color::Slate,
             ])
             ->brandName(fn () => config('app.name', 'سامانه مدیریت جلسات'))
             ->favicon(asset('favicon.ico'))
