@@ -7,7 +7,7 @@ namespace App\Filament\Admin\Resources;
 use App\Domains\Audit\Models\AuditLog;
 use App\Filament\Admin\Resources\AuditLogResource\Pages;
 use Filament\Actions\ViewAction;
-use Filament\Forms\Components\DatePicker;
+use App\Filament\Forms\Components\JalaliDatePicker;
 use Filament\Infolists\Components\KeyValueEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
@@ -182,8 +182,8 @@ class AuditLogResource extends Resource
 
                 Filter::make('performed_at')
                     ->schema([
-                        DatePicker::make('from')->label('از'),
-                        DatePicker::make('until')->label('تا'),
+                        JalaliDatePicker::make('from')->label('از'),
+                        JalaliDatePicker::make('until')->label('تا'),
                     ])
                     ->query(function ($query, array $data) {
                         return $query

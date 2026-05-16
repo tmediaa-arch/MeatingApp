@@ -8,7 +8,7 @@ use App\Domains\Files\Models\File;
 use App\Domains\Shared\Enums\ConfidentialityLevel;
 use App\Filament\Admin\Schemas\FormLayout;
 use App\Filament\Resources\FileResource\Pages;
-use Filament\Forms\Components\DateTimePicker;
+use App\Filament\Forms\Components\JalaliDatePicker;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -74,8 +74,9 @@ class FileResource extends Resource
                             ->options(ConfidentialityLevel::class)
                             ->required()
                             ->default('internal'),
-                        DateTimePicker::make('expires_at')
-                            ->label('تاریخ انقضا'),
+                        JalaliDatePicker::make('expires_at')
+                            ->label('تاریخ انقضا')
+                            ->dateTime(),
                     ]),
                 Section::make('برچسب‌ها')
                     ->collapsed()

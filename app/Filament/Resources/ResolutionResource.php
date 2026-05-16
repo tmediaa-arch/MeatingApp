@@ -10,7 +10,7 @@ use App\Domains\Resolutions\Models\Resolution;
 use App\Filament\Admin\Schemas\FormLayout;
 use App\Filament\Resources\ResolutionResource\Pages;
 use App\Filament\Resources\ResolutionResource\RelationManagers;
-use Filament\Forms\Components\DatePicker;
+use App\Filament\Forms\Components\JalaliDatePicker;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -113,7 +113,7 @@ class ResolutionResource extends Resource
                                 'low' => 'پایین',
                             ])
                             ->default('normal'),
-                        DatePicker::make('due_date')
+                        JalaliDatePicker::make('due_date')
                             ->label('مهلت'),
                     ]),
             ],
