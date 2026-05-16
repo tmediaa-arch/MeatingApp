@@ -59,7 +59,7 @@
                                 خطا: {{ $error }}
                             </div>
                         @elseif($data && $data['type'] === 'stat')
-                            @php $p = $data['payload']; @endphp
+                            @php $p = $data['payload'] ?? $data; @endphp
                             <div class="text-center">
                                 <div class="text-3xl font-bold text-{{ $p['color'] ?? 'primary' }}-600">
                                     {{ number_format((float)$p['value'], strpos((string)$p['value'], '.') !== false ? 1 : 0) }}
@@ -73,11 +73,11 @@
                                 @endif
                             </div>
                         @elseif($data && $data['type'] === 'chart')
-                            @php $p = $data['payload']; @endphp
+                            @php $p = $data['payload'] ?? $data; @endphp
                             <div class="text-xs text-gray-500">نمودار {{ $p['chart_type'] ?? 'bar' }}</div>
                             <pre class="text-xs mt-2 overflow-auto max-h-40">{{ json_encode($p['data'], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) }}</pre>
                         @elseif($data && $data['type'] === 'list')
-                            @php $p = $data['payload']; @endphp
+                            @php $p = $data['payload'] ?? $data; @endphp
                             <ul class="space-y-2 text-sm">
                                 @foreach($p['items'] as $item)
                                     <li class="flex justify-between border-b border-gray-100 dark:border-gray-700 py-2">
@@ -89,7 +89,7 @@
                                 @endforeach
                             </ul>
                         @elseif($data && $data['type'] === 'table')
-                            @php $p = $data['payload']; @endphp
+                            @php $p = $data['payload'] ?? $data; @endphp
                             <div class="text-xs text-gray-500">جدول {{ count($p['rows'] ?? []) }} ردیف</div>
                         @endif
                     </div>

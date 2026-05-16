@@ -41,17 +41,16 @@ class NotificationPreferencesPage extends Page implements HasForms
 
         $this->data['preferences'] = NotificationTemplate::query()
             ->where('is_active', true)
-            ->orderBy('category')
             ->orderBy('key')
             ->get()
             ->map(function ($template) use ($prefs) {
                 $pref = $prefs->get($template->key);
                 $row = [
                     'template_key' => $template->key,
-                    'template_name' => $template->name,
-                    'category' => $template->category,
+                    'template_name' => $template->display_name,
+                    'category' => explode('.', $template->key)[0],
                 ];
-                foreach ($template->available_channels ?? [] as $ch) {
+                foreach ($template->supported_channels ?? [] as $ch) {
                     $row["ch_{$ch}"] = $pref ? in_array($ch, $pref->enabled_channels ?? []) : true;
                 }
                 return $row;

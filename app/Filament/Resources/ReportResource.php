@@ -120,7 +120,7 @@ class ReportResource extends Resource
                         ->label('اجرا')
                         ->icon(Heroicon::OutlinedPlay)
                         ->color('primary')
-                        ->url(fn (Report $record) => Pages\RunReport::getUrl(['record' => $record]))
+                        ->url(fn (Report $record) => Pages\RunReport::getUrl(['record' => $record->getKey()]))
                         ->visible(fn (Report $record) => $record->is_active),
                     Action::make('history')
                         ->label('تاریخچه')

@@ -53,7 +53,7 @@ class DelegationResource extends Resource
                         Select::make('delegator_user_id')
                             ->label('تفویض‌کننده')
                             ->relationship('delegator', 'username')
-                            ->getOptionLabelFromRecordUsing(fn ($r) => $r->resolved_display_name . ' (' . $r->username . ')')
+                            ->getOptionLabelFromRecordUsing(fn ($r) => $r ? trim(($r->resolved_display_name ?? '') . ' (' . $r->username . ')') : '')
                             ->searchable(['username', 'first_name', 'last_name'])
                             ->preload()
                             ->required(),
@@ -61,7 +61,7 @@ class DelegationResource extends Resource
                         Select::make('delegate_user_id')
                             ->label('کاربر نماینده')
                             ->relationship('delegate', 'username')
-                            ->getOptionLabelFromRecordUsing(fn ($r) => $r->resolved_display_name . ' (' . $r->username . ')')
+                            ->getOptionLabelFromRecordUsing(fn ($r) => $r ? trim(($r->resolved_display_name ?? '') . ' (' . $r->username . ')') : '')
                             ->searchable(['username', 'first_name', 'last_name'])
                             ->preload()
                             ->required()

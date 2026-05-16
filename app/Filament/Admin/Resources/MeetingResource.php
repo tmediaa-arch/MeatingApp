@@ -250,23 +250,10 @@ class MeetingResource extends Resource
                             ->label('برچسب‌ها'),
                         Repeater::make('metadata')
                             ->label('فیلدهای اضافه')
-                            ->schema([
-                                TextInput::make('key')->label('کلید')->required(),
+                            ->simple(
                                 TextInput::make('value')->label('مقدار'),
-                            ])
-                            ->columns(2)
-                            ->addActionLabel('افزودن فیلد')
-                            ->formatStateUsing(fn ($state) => collect(is_array($state) ? $state : [])
-                                ->map(fn ($v, $k) => [
-                                    'key' => $k,
-                                    'value' => is_scalar($v) ? $v : json_encode($v, JSON_UNESCAPED_UNICODE),
-                                ])
-                                ->values()
-                                ->all())
-                            ->dehydrateStateUsing(fn ($state) => collect(is_array($state) ? $state : [])
-                                ->filter(fn ($row) => filled($row['key'] ?? null))
-                                ->mapWithKeys(fn ($row) => [$row['key'] => $row['value'] ?? null])
-                                ->all()),
+                            )
+                            ->addActionLabel('افزودن فیلد'),
                     ]),
             ],
         ));

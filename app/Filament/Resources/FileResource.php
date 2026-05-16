@@ -92,7 +92,7 @@ class FileResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\IconColumn::make('icon')
-                    ->hiddenLabel()
+                    ->label('')
                     ->state(fn ($r) => match (true) {
                         str_contains($r->mime_type ?? '', 'pdf') => Heroicon::OutlinedDocument,
                         str_contains($r->mime_type ?? '', 'image') => Heroicon::OutlinedPhoto,
