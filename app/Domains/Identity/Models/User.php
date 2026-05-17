@@ -296,12 +296,11 @@ class User extends Authenticatable implements FilamentUser, HasName, MustVerifyE
         }
 
         return match ($panel->getId()) {
-            'admin' => $this->hasAnyRole(['system-admin', 'organization-admin']),
-            'meeting' => $this->hasAnyPermission([
-                'meeting.view',
-                'meeting.create',
-                'meeting.manage',
-            ]) || $this->employee !== null,
+            // مدیران سامانه، کارمندان و هر کاربری که نقشی داشته باشد
+            // (از جمله کاربران دعوت‌شده با نقش invitee) به پنل دسترسی دارند.
+            'admin' => $this->hasAnyRole(['system-admin', 'organization-admin'])
+                || $this->employee !== null
+                || $this->roles()->exists(),
             default => true,
         };
     }
