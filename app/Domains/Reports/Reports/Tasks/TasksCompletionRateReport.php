@@ -46,11 +46,15 @@ class TasksCompletionRateReport extends AbstractReport
         $total = array_sum($byStatus);
         $completed = $byStatus['completed'] ?? 0;
 
-        // میانگین زمان تکمیل (روز)
+        // میانگین زمان تکمیل (روز) — عبارت بسته به درایور دیتابیس متفاوت است.
+        $avgDaysExpr = DB::connection()->getDriverName() === 'pgsql'
+            ? 'AVG(EXTRACT(EPOCH FROM (completed_at - created_at))/86400)'
+            : 'AVG(TIMESTAMPDIFF(SECOND, created_at, completed_at)/86400)';
+
         $avgDays = Task::query()
             ->whereBetween('created_at', [$from, $to])
             ->whereNotNull('completed_at')
-            ->select(DB::raw("AVG(EXTRACT(EPOCH FROM (completed_at - created_at))/86400) as avg_days"))
+            ->select(DB::raw("{$avgDaysExpr} as avg_days"))
             ->value('avg_days');
 
         return new ReportResult(
