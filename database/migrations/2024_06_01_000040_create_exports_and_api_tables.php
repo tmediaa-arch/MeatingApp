@@ -53,7 +53,7 @@ return new class extends Migration
 
             $table->timestamps();
 
-            $table->index(['organization_id', 'requested_by_user_id', 'created_at']);
+            $table->index(['organization_id', 'requested_by_user_id', 'created_at'], 'export_jobs_org_user_created_idx');
             $table->index(['status', 'expires_at']);
             $table->index(['export_type', 'format']);
         });

@@ -55,7 +55,7 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->unique(['organization_id', 'name']);
-            $table->index(['organization_id', 'is_active', 'is_default']);
+            $table->index(['organization_id', 'is_active', 'is_default'], 'vc_providers_org_active_default_idx');
         });
 
         // ─────────────────────────────────────────────────

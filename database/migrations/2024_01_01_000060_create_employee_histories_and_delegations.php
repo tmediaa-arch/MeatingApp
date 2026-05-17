@@ -56,7 +56,7 @@ return new class extends Migration
             $table->index(['employee_id', 'started_at']);
             $table->index(['position_id', 'ended_at']);
             // اطمینان از اینکه برای یک employee+position+started_at یکتا باشد
-            $table->unique(['employee_id', 'position_id', 'started_at']);
+            $table->unique(['employee_id', 'position_id', 'started_at'], 'eph_emp_pos_started_unique');
         });
 
         Schema::create('user_delegations', function (Blueprint $table) {
