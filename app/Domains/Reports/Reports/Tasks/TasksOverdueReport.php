@@ -54,11 +54,16 @@ class TasksOverdueReport extends AbstractReport
             ->when($input->organizationId, fn ($q, $id) => $q->where('organization_id', $id))
             ->when($input->get('priority'), fn ($q, $p) => $q->where('priority', $p));
 
+        // عبارت «روز تأخیر» بسته به درایور دیتابیس متفاوت است.
+        $daysOverdueExpr = DB::connection()->getDriverName() === 'pgsql'
+            ? 'EXTRACT(EPOCH FROM (NOW() - due_date))/86400'
+            : 'TIMESTAMPDIFF(SECOND, due_date, NOW())/86400';
+
         $rows = (clone $query)
             ->select(
                 'id', 'task_number', 'title', 'status', 'priority',
                 'due_date', 'assignee_user_id', 'escalation_level', 'progress_percent',
-                DB::raw("EXTRACT(EPOCH FROM (NOW() - due_date))/86400 as days_overdue")
+                DB::raw("{$daysOverdueExpr} as days_overdue")
             )
             ->orderBy('escalation_level', 'desc')
             ->orderBy('due_date')

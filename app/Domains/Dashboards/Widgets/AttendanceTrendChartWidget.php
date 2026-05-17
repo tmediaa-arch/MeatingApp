@@ -20,12 +20,17 @@ class AttendanceTrendChartWidget extends AbstractDashboardWidget
         $weeks = (int) ($widget->config['weeks'] ?? 12);
         $from = now()->subWeeks($weeks)->startOfWeek();
 
+        // شروع هفته (دوشنبه) — PostgreSQL از DATE_TRUNC و MySQL از WEEKDAY استفاده می‌کند.
+        $weekExpr = DB::connection()->getDriverName() === 'pgsql'
+            ? "DATE_TRUNC('week', scheduled_start_at)"
+            : 'DATE(scheduled_start_at - INTERVAL WEEKDAY(scheduled_start_at) DAY)';
+
         $data = Meeting::query()
             ->where('scheduled_start_at', '>=', $from)
             ->where('status', 'completed')
             ->when($user->organization_id, fn ($q, $id) => $q->where('organization_id', $id))
             ->select(
-                DB::raw("DATE_TRUNC('week', scheduled_start_at) as week"),
+                DB::raw("{$weekExpr} as week"),
                 DB::raw('COUNT(*) as cnt')
             )
             ->groupBy('week')
